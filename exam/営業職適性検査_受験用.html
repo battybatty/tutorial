@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>営業職 採用適性検査</title>
+<style>
+
+:root{
+  --paper:#F5F7FA; --surface:#FFFFFF; --surface-2:#EDF0F5;
+  --ink:#151C26; --ink-2:#4C5867; --ink-3:#7C8796;
+  --rule:#D6DCE4; --rule-2:#E7EBF1;
+  --indigo:#2E4E7E; --indigo-soft:#E9EEF6;
+  --vermilion:#B23A26; --vermilion-soft:#FAEDEA;
+  --green:#2F6B4F; --green-soft:#E8F1EC;
+  --on-accent:#FFFFFF;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#10141A; --surface:#161B23; --surface-2:#1D242E;
+  --ink:#E3E8EF; --ink-2:#A6B1C0; --ink-3:#78838F;
+  --rule:#2A323D; --rule-2:#222933;
+  --indigo:#8FB0DC; --indigo-soft:#1A2432;
+  --vermilion:#E4836A; --vermilion-soft:#2C1E1A;
+  --green:#7FBF9C; --green-soft:#152420;
+  --on-accent:#10141A;
+}}
+:root[data-theme="dark"]{
+  --paper:#10141A; --surface:#161B23; --surface-2:#1D242E;
+  --ink:#E3E8EF; --ink-2:#A6B1C0; --ink-3:#78838F;
+  --rule:#2A323D; --rule-2:#222933;
+  --indigo:#8FB0DC; --indigo-soft:#1A2432;
+  --vermilion:#E4836A; --vermilion-soft:#2C1E1A;
+  --green:#7FBF9C; --green-soft:#152420;
+  --on-accent:#10141A;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",
+    "Noto Sans JP",Meiryo,system-ui,sans-serif;
+  font-size:15px;line-height:1.85;-webkit-font-smoothing:antialiased}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace;
+  font-feature-settings:"tnum";font-variant-numeric:tabular-nums}
+.wrap{max-width:880px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif;
+  font-weight:600;letter-spacing:.02em;text-wrap:balance}
+a{color:var(--indigo)}
+button{font:inherit}
+.btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:var(--surface);
+  padding:12px 30px;font-size:15px;font-weight:500;cursor:pointer;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--rule)}
+.btn.accent{background:var(--indigo);border-color:var(--indigo);color:var(--on-accent)}
+:focus-visible{outline:2px solid var(--indigo);outline-offset:2px}
+.note{border:1px solid var(--rule);border-left:3px solid var(--indigo);
+  background:var(--surface);padding:16px 20px;margin:20px 0;font-size:13.5px;
+  line-height:1.8;color:var(--ink-2)}
+.note.warn{border-left-color:var(--vermilion);background:var(--vermilion-soft)}
+.note.ok{border-left-color:var(--green);background:var(--green-soft)}
+.note b{color:var(--ink);display:block;margin-bottom:5px;font-size:12px;letter-spacing:.1em}
+.kicker{font-size:11.5px;letter-spacing:.18em;color:var(--indigo);margin:0 0 10px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--rule-2);vertical-align:top}
+thead th{font-size:11px;letter-spacing:.1em;color:var(--ink-3);font-weight:500;
+  background:var(--surface-2);border-bottom:1px solid var(--rule);white-space:nowrap}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);background:var(--surface)}
+td.num,th.num{text-align:right;white-space:nowrap;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+
+/* ---- 受験画面 ---- */
+#bar{position:sticky;top:0;z-index:50;background:var(--surface);
+  border-bottom:1px solid var(--rule);padding:9px 24px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px 20px;flex-wrap:wrap}
+#bar .id{font-size:13.5px;font-weight:700;white-space:nowrap}
+#bar .mid{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--ink-3);min-width:0}
+.dots{display:flex;gap:5px}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--rule);display:block}
+.dots i.on{background:var(--indigo)}
+.dots i.done{background:var(--ink-3)}
+#timer{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums;
+  font-size:21px;font-weight:500;letter-spacing:.02em;padding:2px 12px;
+  border:1px solid var(--rule);background:var(--paper);min-width:96px;text-align:center}
+#timer.low{color:var(--vermilion);border-color:var(--vermilion);background:var(--vermilion-soft)}
+#timer.hidden{visibility:hidden}
+main{padding:0 0 90px}
+.screen{padding:44px 0 0}
+h1{font-size:clamp(26px,5vw,38px);line-height:1.35;margin:0 0 20px}
+h2{font-size:23px;margin:0 0 6px}
+.lead{color:var(--ink-2);max-width:40em;margin:0 0 26px}
+.sec-meta{display:flex;gap:20px;flex-wrap:wrap;margin:0 0 30px;font-size:12.5px;color:var(--ink-3);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.sec-meta b{color:var(--ink-2);font-weight:500}
+.field{display:grid;gap:5px;margin:0 0 16px;max-width:30em}
+.field label{font-size:12.5px;color:var(--ink-2);letter-spacing:.04em}
+.field label .req{color:var(--vermilion);margin-left:5px;font-size:11px}
+.field input{font:inherit;font-size:15px;padding:10px 13px;border:1px solid var(--rule);
+  background:var(--surface);color:var(--ink);width:100%}
+.consent{display:grid;grid-template-columns:auto 1fr;gap:0 12px;align-items:start;
+  margin:12px 0;padding:15px 17px;border:1px solid var(--rule);background:var(--surface);
+  font-size:13.5px;line-height:1.8;color:var(--ink-2);cursor:pointer}
+.consent input{margin-top:6px;width:17px;height:17px;accent-color:var(--indigo)}
+.q{border:0;border-top:1px solid var(--rule);margin:0;padding:26px 0;min-width:0}
+.q-legend{padding:0}
+.q-no{font-size:12px;letter-spacing:.06em;color:var(--indigo)}
+.q-text{margin:6px 0 0;font-size:14.5px;line-height:1.85}
+.q-text em{font-style:normal;font-weight:700;
+  background:linear-gradient(transparent 62%,var(--indigo-soft) 62%)}
+.opts{display:grid;gap:4px;margin:15px 0 0}
+.opt{display:grid;grid-template-columns:auto auto 1fr;gap:0 12px;align-items:baseline;
+  padding:11px 15px;background:var(--surface);border:1px solid var(--rule-2);
+  border-left:3px solid transparent;cursor:pointer;transition:border-color .12s,background .12s}
+.opt:hover{border-color:var(--rule);border-left-color:var(--rule)}
+.opt input{margin:0;align-self:center;width:16px;height:16px;accent-color:var(--indigo)}
+.opt-mk{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--ink-3)}
+.opt-t{font-size:14px;line-height:1.75}
+.opt:has(input:checked){border-color:var(--indigo);border-left-color:var(--indigo);
+  background:var(--indigo-soft)}
+.opt:has(input:checked) .opt-mk{color:var(--indigo);font-weight:700}
+.passage{margin:0 0 4px;padding:22px 24px;background:var(--surface);border:1px solid var(--rule);
+  border-left:3px solid var(--ink-3);
+  font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif;font-size:15px;line-height:2.05}
+.passage p{margin:0 0 1.1em}.passage p:last-child{margin:0}
+.passage .plabel{font-family:inherit;font-size:11.5px;letter-spacing:.14em;color:var(--ink-3);
+  margin:0 0 12px;font-weight:400}
+.likert-legend{position:sticky;top:52px;z-index:20;display:flex;gap:0;margin:0 0 2px;
+  background:var(--surface-2);border:1px solid var(--rule);font-size:11px;color:var(--ink-2)}
+.likert-legend div{flex:1;padding:7px 4px;text-align:center;border-right:1px solid var(--rule-2)}
+.likert-legend div:last-child{border-right:0}
+.likert-legend b{display:block;font-size:14px;color:var(--indigo);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.item{display:grid;grid-template-columns:38px 1fr;gap:0 8px;align-items:center;
+  padding:10px 12px;background:var(--surface);border:1px solid var(--rule-2);margin-top:3px}
+.item.miss{border-color:var(--vermilion)}
+.it-no{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--ink-3);
+  text-align:right}
+.it-t{font-size:14px;line-height:1.7}
+.lk{grid-column:1/-1;display:flex;gap:3px;margin-top:8px}
+.lk label{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:7px 2px;border:1px solid var(--rule-2);background:var(--paper);cursor:pointer;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;color:var(--ink-2)}
+.lk label:hover{border-color:var(--rule)}
+.lk input{margin:0;width:15px;height:15px;accent-color:var(--indigo)}
+.lk label:has(input:checked){border-color:var(--indigo);background:var(--indigo-soft);
+  color:var(--indigo);font-weight:700}
+@media (min-width:700px){
+  .item{grid-template-columns:38px 1fr auto;gap:0 14px}
+  .lk{grid-column:auto;margin-top:0;width:330px}
+}
+.navbar{position:sticky;bottom:0;margin-top:36px;padding:16px 0 20px;background:var(--paper);
+  border-top:1px solid var(--rule);display:flex;align-items:center;
+  justify-content:space-between;gap:16px;flex-wrap:wrap}
+.navbar .status{font-size:12.5px;color:var(--ink-3);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.navbar .status.miss{color:var(--vermilion)}
+#outbox{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:11.5px;line-height:1.6;padding:14px;border:1px solid var(--rule);
+  background:var(--surface);color:var(--ink-2);white-space:pre;overflow:auto}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin:22px 0}
+.summary{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--rule);background:var(--surface);
+  margin:24px 0}
+.summary div{flex:1 1 120px;padding:13px 16px;border-right:1px solid var(--rule-2)}
+.summary div:last-child{border-right:0}
+.summary dt{font-size:11px;letter-spacing:.1em;color:var(--ink-3);margin:0 0 3px}
+.summary dd{margin:0;font-size:17px;font-weight:500;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.summary dd.miss{color:var(--vermilion)}
+</style>
+</head>
+<body>
+<header id="bar">
+  <div class="id">営業職 採用適性検査</div>
+  <div class="mid">
+    <span id="partlabel">受検前</span>
+    <span class="dots" id="dots" aria-hidden="true"></span>
+  </div>
+  <div id="timer" class="hidden" role="timer" aria-live="off">--:--</div>
+</header>
+<main><div class="wrap" id="app"></div></main>
+
+<script>
+"use strict";
+var DATA = {"titles": ["言語能力", "数的処理", "論理推理", "状況判断テスト", "性格・行動特性"], "limits": [600, 900, 600, 900, null], "intros": ["提案書やメールの品質、顧客の要望を正確に読み取る力を測ります。", "営業実務で扱う数値処理の正確さと速さを測ります。<strong>電卓は使用できません。</strong>計算用の紙をお使いください。", "条件を整理し、確実に言えることと言えないことを見分ける力を測ります。", "営業の現場で実際に起こりうる場面です。<strong>あなたが取る行動として最も適切だと思うもの</strong>を1つ選んでください。明確な正解が定まらない設問もありますが、必ず1つお選びください。", "正解・不正解はありません。深く考えず、普段のあなたに最も近いものを直感でお選びください。この部に制限時間はありません。"], "parts": [[{"q": "取引先に対し、自社の営業部長である田中の発言を伝える場面です。言葉づかいとして最も適切なものを1つ選びなさい。", "opts": ["部長の田中が申しておりました", "田中部長がおっしゃっていました", "田中部長が申されていました", "田中部長がお話しになられていました"], "passage": false}, {"q": "「忸怩（じくじ）たる思い」の意味として最も適切なものを1つ選びなさい。", "opts": ["思いどおりにならず、いらだたしく感じること", "相手の対応に対し、強い怒りを覚えること", "先行きが見通せず、不安に思うこと", "自分の行いについて、深く恥じ入ること"], "passage": false}, {"q": "「万年筆：文房具」と同じ関係になる組み合わせを1つ選びなさい。", "opts": ["医師：病院", "バラ：花", "包丁：料理", "雨：傘"], "passage": false}, {"q": "「気が置けない」を正しく用いている文を1つ選びなさい。", "opts": ["あの取引先の担当者は気が置けないので、発言には十分注意している。", "初対面の相手なので気が置けず、当たり障りのない話に終始した。", "彼とは十年来の付き合いで、気が置けない間柄だ。", "金額の大きい案件は気が置けないため、必ず上司の同席を求めている。"], "passage": false}, {"q": "次のア〜エの文を、意味が通るように並べ替えたとき、<em>3番目</em>にくる文を1つ選びなさい。", "opts": ["多くの場合、複数の部門が異なる評価基準をもって関与するからである。", "法人の購買では、担当者が単独で発注を決めることはまれである。", "そのため、初回訪問の目的を「受注」ではなく「課題の特定」に置く必要がある。", "結果として、社内の合意形成に時間がかかり、検討は長期化しやすい。"], "passage": false}, {"q": "手紙の書き出しに「前略」を用いたとき、結語として適切なものを1つ選びなさい。", "opts": ["草々", "敬具", "謹白", "拝復"], "passage": false}, {"q": "本文によれば、有望な商談が消滅する最大の原因は何か。最も適切なものを1つ選びなさい。", "opts": ["競合他社に価格で敗れること", "顧客が意思決定を先送りし、現状維持を選ぶこと", "提案書の完成度が低いこと", "営業担当者が製品知識を欠いていること"], "passage": true}, {"q": "本文において、「先送り」が起きる理由として筆者が挙げているものを1つ選びなさい。", "opts": ["顧客が製品同士の優劣を判断できないから", "競合製品の方が機能面で優れているから", "変更に伴う負荷と責任を引き受ける人が社内に現れないから", "決裁者と担当者の意見が対立しているから"], "passage": false}, {"q": "本文の主張と最も合致するものを1つ選びなさい。", "opts": ["提案書の完成度を高めることが、案件の成否を分ける決定的な要因である。", "競合分析を徹底することが、失注を防ぐうえで最も効果的である。", "意思決定者に直接接触し、担当者を介さずに交渉を進めるべきである。", "現状を維持した場合に失われるものを、顧客自身が具体的に認識できる状態にすることが重要である。"], "passage": false}, {"q": "次の文の空欄に入る語として最も適切なものを1つ選びなさい。<br>「製品の欠陥により顧客に損害が生じた場合、当社は契約に定める範囲で損害を（　　）する。」", "opts": ["保障", "保証", "補償", "補障"], "passage": false}], [{"q": "定価12,000円の商品を15%引きで販売した。販売価格はいくらか。", "opts": ["10,000円", "10,200円", "10,500円", "10,800円"], "passage": false}, {"q": "仕入原価8,000円の商品に、原価の25%にあたる利益を上乗せして定価をつけた。定価はいくらか。", "opts": ["8,400円", "9,600円", "10,000円", "10,400円"], "passage": false}, {"q": "ある商品に原価の40%増しで定価をつけ、定価の20%引きで販売したところ、1個あたり240円の利益が出た。この商品の原価はいくらか。", "opts": ["1,600円", "1,800円", "2,000円", "2,400円"], "passage": false}, {"q": "ある営業所の月間売上目標は1,500万円である。第1週420万円、第2週380万円、第3週310万円の実績であった。第4週で目標を達成するには、最低いくらの売上が必要か。", "opts": ["390万円", "410万円", "430万円", "460万円"], "passage": false}, {"q": "昨年度の売上が8,400万円、今年度の売上が9,660万円であった。対前年成長率はいくらか。", "opts": ["11%", "12%", "13%", "15%"], "passage": false}, {"q": "新規訪問100件のうち、商談化したものが25件、そのうち受注に至ったものが8件であった。<em>商談化した案件のうち</em>、受注に至った割合はいくらか。", "opts": ["8%", "25%", "32%", "40%"], "passage": false}, {"q": "ある営業リストの作成にあたり、Aさん1人では6時間、Bさん1人では12時間かかる。2人が同時に取りかかった場合、完成までに何時間かかるか。", "opts": ["3時間", "4時間", "4時間30分", "9時間"], "passage": false}, {"q": "営業担当5名の今月の受注件数は、12件、8件、15件、9件、11件であった。ここに6人目が加わり、6名の平均受注件数が12件になるためには、6人目は何件受注する必要があるか。", "opts": ["12件", "14件", "15件", "17件"], "passage": false}, {"q": "ある商品を定価から10%引きし、さらに会員割引として5%引きした。定価に対して合計何%引きに相当するか。", "opts": ["14.5%", "15%", "15.5%", "16%"], "passage": false}, {"q": "得意先A社まで、時速40kmで45分かかる。自社からA社までを往復した場合の走行距離は何kmか。", "opts": ["30km", "60km", "75km", "90km"], "passage": false}, {"q": "現在3件の商談を抱えており、それぞれの受注確率は独立に50%、40%、25%と見積もられている。少なくとも1件を受注できる確率はいくらか。", "opts": ["55%", "65%", "70%", "77.5%"], "passage": false}, {"q": "担当する顧客120社のうち、製品Aを導入しているのが58社、製品Bを導入しているのが47社、両方を導入しているのが21社であった。どちらも導入していない顧客は何社か。", "opts": ["36社", "57社", "63社", "84社"], "passage": false}], [{"q": "「当社が提案書を提出した顧客は、全員が見積もりを依頼している」が正しいとき、<em>確実に言える</em>ことを1つ選びなさい。", "opts": ["見積もりを依頼していない顧客には、提案書を提出していない。", "見積もりを依頼した顧客には、全員に提案書を提出している。", "提案書を提出していない顧客は、見積もりを依頼していない。", "見積もりを依頼した顧客の中に、提案書を提出していない顧客はいない。"], "passage": false}, {"q": "「すべての優秀な営業担当者は、商談後に記録を残している」「田中氏は商談後に記録を残している」の2つが正しいとき、<em>確実に言える</em>ことを1つ選びなさい。", "opts": ["田中氏は優秀な営業担当者である。", "田中氏は優秀な営業担当者ではない。", "記録を残している者は、全員が優秀な営業担当者である。", "記録を残していない者は、優秀な営業担当者ではない。"], "passage": false}, {"q": "A〜Eの5名の今月の売上には順位があり、同順位はない。次の条件がすべて成り立つとき、<em>3位</em>は誰か。<br>① AはBより上位　② CはDより下位　③ EはAのすぐ下の順位　④ Bは4位　⑤ Dは1位ではない", "opts": ["A", "C", "D", "E"], "passage": false}, {"q": "佐藤・鈴木・高橋の3名は、製造・小売・金融のいずれか異なる業種を1つずつ担当している。今月の受注件数はそれぞれ3件・5件・8件のいずれかで、すべて異なる。次の条件がすべて成り立つとき、<em>確実に言える</em>ことを1つ選びなさい。<br>① 佐藤は金融担当ではない　② 製造担当の受注は5件　③ 鈴木の受注は8件　④ 高橋は小売担当ではない", "opts": ["鈴木は小売担当である。", "佐藤の受注は8件ではない。", "高橋の受注は5件である。", "佐藤は製造担当である。"], "passage": false}, {"q": "営業部の定例会議は、月曜・火曜・水曜・木曜のいずれか1日に行われる。次の3つの情報のうち、<em>2つは正しく、1つは誤っている</em>。会議は何曜日か。<br>① 会議は月曜日ではない　② 会議は火曜日である　③ 会議は水曜日ではない", "opts": ["月曜日", "火曜日", "水曜日", "木曜日"], "passage": false}, {"q": "次の2つが正しいとき、<em>確実に言える</em>ことを1つ選びなさい。<br>① 提案研修を受講した社員は、全員が月10件以上の商談を行っている<br>② 月10件以上の商談を行っている社員の中には、入社1年目の社員も含まれる", "opts": ["入社1年目の社員は、全員が提案研修を受講している。", "提案研修を受講していない社員は、月10件以上の商談を行っていない。", "月10件未満の商談しか行っていない社員は、提案研修を受講していない。", "提案研修を受講した社員の中には、入社1年目の社員がいる。"], "passage": false}, {"q": "ある営業所の月間受注件数が、次のように一定の規則で推移している。□に入る数はいくつか。<br>　3、6、11、18、27、□", "opts": ["36", "38", "40", "42"], "passage": false}, {"q": "A社〜E社の5社を、1日で1社ずつ、計5社訪問する。次の条件がすべて成り立つとき、<em>4番目</em>に訪問するのはどこか。<br>① A社の次にB社を訪問する　② C社を最初に訪問する　③ D社はB社より前に訪問する　④ E社は3番目", "opts": ["A社", "B社", "D社", "E社"], "passage": false}], [{"q": "受注済み案件について、社内の生産部門から「納期が2週間遅れる見込み」との連絡が入った。顧客の担当者からはまだ何も言われていない。あなたはどうするか。", "opts": ["確定情報ではないため、遅延が確実になってから顧客に連絡する。", "生産部門に納期短縮を強く要請し、結果が出るまで顧客への連絡は保留する。", "ただちに顧客に一次連絡を入れ、判明している事実と社内で調整中であることを伝えたうえで、代替案の提示時期を約束する。", "上司にメールで報告し、上司から顧客に連絡してもらうよう依頼する。"], "passage": false}, {"q": "商談中の顧客から「競合他社はもっと安い。同じ金額まで下げてくれれば決める」と言われた。提示価格はすでに標準的な値引き幅の範囲内である。あなたはどうするか。", "opts": ["受注を確実にするため、その場で要求額まで値引きすることを約束する。", "自社製品の値引きはできないと伝えたうえで、競合製品の品質上の問題点を強調する。", "「これ以上は下げられません」と即答し、価格の話を打ち切る。", "競合との条件差（保守範囲・納期・実績など）を確認したうえで、価格差の根拠を説明し、価格以外の条件も含めた見直し案を検討すると伝える。"], "passage": false}, {"q": "契約直前の顧客が、製品の仕様を一部誤解していることに気づいた。その機能は顧客が重視している点ではないが、説明すれば検討が長引く可能性がある。あなたはどうするか。", "opts": ["顧客が重視していない点なので、あえて触れずに契約を進める。", "誤解に気づいたことを社内にだけ共有し、顧客には伝えない。", "契約前に誤解を正し、正確な仕様を説明したうえで、あらためて意思を確認する。", "契約を済ませたうえで、導入時にあらためて説明する。"], "passage": false}, {"q": "同僚が担当する顧客から、あなたの携帯に直接問い合わせが入った。内容は緊急性のあるトラブル報告だが、同僚は外出中で連絡がつかない。あなたはどうするか。", "opts": ["担当外であることを伝え、同僚が戻り次第折り返すと伝えて電話を切る。", "まず状況を聴き取って一次対応を行い、内容を記録して同僚と上司に速やかに共有する。", "自分の判断で対応をすべて引き取り、解決してから同僚に報告する。", "顧客に同僚の携帯番号を伝え、直接連絡してもらう。"], "passage": false}, {"q": "月末で目標に対し300万円が不足している。ある顧客は来月発注を予定しているが、今月中に前倒しで発注してもらえれば目標を達成できる。あなたはどうするか。", "opts": ["今月中の発注が顧客にとっても合理的かを検討し、根拠がある場合に限り、条件を明示したうえで打診する。", "「今月中なら特別価格になる」と、実際にはない条件を提示して発注を促す。", "顧客との関係を頼りに、自分の事情を説明して個人的な配慮として発注を依頼する。", "いったん今月で受注処理し、来月あらためて正式な契約書を交わす。"], "passage": false}, {"q": "長年の取引先の担当者から、契約更新を前提に、社内規程の範囲を明らかに超える接待を個人的に求められた。あなたはどうするか。", "opts": ["取引継続を優先し、自費で対応する。", "角が立たないよう曖昧に受け流し、社内には報告しない。", "その場で強く拒否し、担当者の姿勢を批判する。", "その場では明確に応じず、要求の内容を記録したうえで、上司およびコンプライアンス部門に速やかに報告し、対応方針の指示を仰ぐ。"], "passage": false}, {"q": "顧客から強い口調でクレームの電話が入った。話を聞く限り、原因は顧客側の操作手順にあるように思われる。あなたはどうするか。", "opts": ["まず最後まで話を聴き、事実関係と発生状況を確認したうえで、責任の所在を断定せずに調査と復旧の手順を提示する。", "早い段階で「こちらに非はありません」と伝え、顧客側の誤操作であることを説明する。", "原因が不明なうちから全面的に非を認め、その場で補償を約束する。", "技術部門の担当者にそのまま電話を転送する。"], "passage": false}, {"q": "重要な提案書の提出期限と、別の大口顧客との商談が同じ日に重なった。どちらも自分ひとりでは対応しきれない。あなたはどうするか。", "opts": ["商談を優先し、提案書は期限を過ぎてから提出する。", "両方の重要度と期限の動かしやすさを整理し、早い段階で上司に状況を報告して、分担または日程調整を相談する。", "提案書を優先し、商談は当日に日程変更を申し入れる。", "徹夜してでも両方を1人でこなす。"], "passage": false}, {"q": "主要顧客の窓口担当者が異動し、後任に交代することになった。前任者とは良好な関係を築いていた。あなたはどうするか。", "opts": ["前任者に後任者の紹介を依頼し、これまでの経緯・課題・合意事項を整理した資料を用意して、早期に後任者と面談の場を持つ。", "後任者からの連絡を待ち、依頼があってから対応する。", "関係を一から作り直すことになるため、当面は様子を見る。", "前任者の異動先に営業を継続し、後任者への対応は最小限にとどめる。"], "passage": false}, {"q": "訪問先の顧客から、雑談の中で競合他社の未公開の価格情報を聞かされた。相手は「参考までに」と言っている。あなたはどうするか。", "opts": ["自社の提案に有利に働くため、その情報をもとに価格を設定して提案する。", "より詳しい内容を聞き出し、社内で共有する。", "深追いせずに話題を変え、その情報を提案の根拠としては用いない。取り扱いに迷う場合は上司に相談する。", "競合他社に事実確認の連絡を入れる。"], "passage": false}]], "passage": ["法人向けの営業活動においてしばしば見落とされるのは、顧客が「買わない」という選択を常に持っているという事実である。営業担当者は自社製品と競合製品の比較に意識を奪われがちだが、実際に案件が消滅する最大の原因は競合への失注ではなく、意思決定そのものの先送りである。ある調査によれば、有望と判断された商談のうち、競合他社に敗れたものよりも、「現状維持」という結論に至って立ち消えになったものの方が多かったという。", "先送りが起きるのは、担当者が製品の優劣を判断できないからではない。多くの場合、変更に伴う手間やリスクを社内で引き受ける人がいないからである。新しい仕組みを導入すれば、現場は一時的に負荷を負い、推進者は失敗したときの責任を負う。この負担の引き受け手が現れない限り、どれほど優れた提案であっても組織は動かない。", "したがって営業担当者に求められるのは、製品の優位性を語ることよりも、現状を維持した場合のコストを、顧客自身の言葉で語れる状態にすることである。放置すれば何が失われるのかが具体的な数字として社内で共有されたとき、はじめて変更の負担は「引き受けるに値するもの」となる。提案書の巧拙よりも、この一点に案件の成否は左右される。"], "items": ["高い目標を掲げ、達成に向けて粘り強く取り組むほうだ", "初対面の人とでも、すぐに打ち解けて話ができる", "強いプレッシャーのかかる場面でも、冷静さを保てる", "ルールや手続きは、多少非効率でも守るべきだと思う", "指示を待たず、自分で必要なことを見つけて動くほうだ", "チームの成果のために、自分の役割以外の仕事も引き受ける", "目標が未達のまま月を終えると、強く悔しさを感じる", "相手の立場や関心に合わせて、話の内容を変えることができる", "失敗を引きずらず、気持ちを切り替えるのが早い", "これまで、約束の期限を破ったことは一度もない", "やると決めたことは、周囲に言われなくても最後までやり切る", "同僚が困っているときは、自分から声をかけて手伝う", "競争のある環境のほうが力を発揮できる", "意見が対立したとき、相手が納得できる説明ができる", "断られたり否定されたりしても、あまり落ち込まない", "数字を良く見せるための多少の誇張は、営業では必要だと思う", "新しい仕事は、やり方が決まっていなくても自分から進められる", "チームの決定には、自分の意見と違っても協力する", "現状に満足せず、より高い水準を求めるほうだ", "人と話すことにエネルギーを使い、疲れてしまうことが多い", "予定が急に変わっても、動揺せずに対応できる", "少額であれば、経費の使途を厳密に記録しなくてもよいと思う", "誰かに言われる前に、自分から改善策を提案することが多い", "自分個人の成果より、チーム全体の成果を優先して考える", "これまで、他人の悪口を言ったことは一度もない", "目標達成のために、日々の行動量を自分で管理している", "人の名前や関心事を覚えるのが得意だ", "うまくいかない日が続くと、やる気が大きく下がってしまう", "顧客に不利な情報でも、必要であれば正直に伝える", "慣れない状況では、誰かの指示を待つほうが安心だ", "他部門と連携して物事を進めるのが得意だ", "達成した目標より、次の課題に意識が向く", "相手の話を最後まで聴いてから、自分の意見を述べる", "厳しい指摘を受けても、感情的にならずに受け止められる", "社内規程に反する指示であれば、上司の指示でも従わない", "新しい進め方を試すことに抵抗がない", "自分の担当外のことには、あまり口を出さないほうがよい", "結果が出るまで努力を続けることに、苦痛を感じない", "大勢の前で話すことに、抵抗を感じない", "気持ちの落ち込みを、翌日に持ち越すことは少ない", "これまで、うそをついたことは一度もない", "誰も見ていない場面でも、手順どおりに仕事を進める", "前例のない依頼でも、まず自分で調べて対応してみる", "成果を上げた同僚を、素直に称賛できる", "目標は、達成可能な水準より少し高めに設定したい", "相手の本音を引き出す質問を考えるのが得意だ", "忙しい時期でも、体調や生活のリズムを保てる", "顧客の要望であっても、契約範囲を超えることは受けない", "指示された範囲を超えて動くのは、避けたほうがよい", "情報は自分で抱えず、チームに共有するほうだ", "人と競って勝つことに喜びを感じる", "初対面の相手からも信頼されやすいほうだ", "想定外のトラブルが起きても、落ち着いて優先順位をつけられる", "業務上知り得た情報を、社外で話題にすることはない", "これまで、遅刻をしたことは一度もない", "どんな相手に対しても、いらだちを感じたことはない"]};
+var CH = ["ア","イ","ウ","エ"];
+var LS = "sales-aptitude-v1";
+var S = null, timerId = null, deadline = null, dirty = false;
+
+/* ---------- utils ---------- */
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+function two(n){ return (n<10?"0":"")+n; }
+function fmt(sec){ if(sec<0) sec=0; return two(Math.floor(sec/60))+":"+two(sec%60); }
+function nowIso(){ return new Date().toISOString(); }
+function jdate(d){ var x=new Date(d); return x.getFullYear()+"-"+two(x.getMonth()+1)+"-"+two(x.getDate())
+  +" "+two(x.getHours())+":"+two(x.getMinutes()); }
+function dur(ms){ var s=Math.round(ms/1000); return Math.floor(s/60)+"分"+two(s%60)+"秒"; }
+function fnv1a(str){ var h=0x811c9dc5;
+  for(var i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=(h+((h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24)))>>>0; }
+  return ("0000000"+h.toString(16)).slice(-8); }
+function b64(str){ var bytes=new TextEncoder().encode(str), bin="";
+  for(var i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
+  return btoa(bin); }
+function chunk(s,n){ var o=[]; for(var i=0;i<s.length;i+=n) o.push(s.slice(i,i+n)); return o.join("\n"); }
+
+/* ---------- state ---------- */
+function fresh(){
+  return { meta:{name:"",email:"",code:"",start:null,end:null,reloads:0},
+           screen:"intro", parts:[], ans:[[],[],[],[],[]] };
+}
+function save(){
+  try{ localStorage.setItem(LS, JSON.stringify({s:S, deadline:deadline})); }catch(e){}
+}
+function load(){
+  try{ var r=localStorage.getItem(LS); return r?JSON.parse(r):null; }catch(e){ return null; }
+}
+function clearSaved(){ try{ localStorage.removeItem(LS); }catch(e){} }
+
+/* ---------- chrome ---------- */
+function paintChrome(){
+  var d=""; for(var i=0;i<5;i++){
+    var cls = S.screen==="p"+i ? "on" : (S.parts.length>i ? "done" : "");
+    d += '<i class="'+cls+'"></i>';
+  }
+  el("dots").innerHTML=d;
+  var m = /^p(\d)$/.exec(S.screen);
+  el("partlabel").textContent = m ? ("第"+(+m[1]+1)+"部　"+DATA.titles[+m[1]])
+    : (S.screen==="done" ? "終了" : "受検前");
+}
+
+/* ---------- timer ---------- */
+function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } deadline=null;
+  el("timer").className="hidden"; el("timer").textContent="--:--"; }
+function startTimer(limit, resumeDeadline){
+  var t=el("timer");
+  if(limit===null){ t.className="hidden"; t.textContent="--:--"; return; }
+  deadline = resumeDeadline || (Date.now()+limit*1000);
+  t.className="";
+  tick();
+  timerId = setInterval(tick, 250);
+}
+function tick(){
+  if(deadline===null) return;
+  var left = Math.ceil((deadline-Date.now())/1000);
+  var t=el("timer");
+  t.textContent = fmt(left);
+  t.className = left<=60 ? "low" : "";
+  if(left<=0){ clearInterval(timerId); timerId=null; deadline=null; finishPart(true); }
+}
+
+/* ---------- screens ---------- */
+function go(screen){ S.screen=screen; save(); render(); window.scrollTo(0,0); }
+
+function render(){
+  paintChrome();
+  if(S.screen==="intro") return renderIntro();
+  if(S.screen==="done")  return renderDone();
+  var m=/^p(\d)$/.exec(S.screen);
+  if(m) return renderPart(+m[1]);
+  renderIntro();
+}
+
+function renderIntro(){
+  stopTimer();
+  var app=el("app");
+  app.innerHTML =
+   '<div class="screen">'
+  +'<p class="kicker mono">RECRUITMENT APTITUDE TEST — SALES</p>'
+  +'<h1>営業職 採用適性検査</h1>'
+  +'<p class="lead">全5部、所要時間はおよそ60分です。第1部から第4部までは部ごとに制限時間があり、'
+  +'時間になると自動的に次の部へ進みます。<strong>一度進むと前の部には戻れません</strong>ので、'
+  +'まとまった時間が取れるときに開始してください。</p>'
+  +'<div class="tablewrap" style="margin:0 0 24px"><table><thead><tr>'
+  +'<th>部</th><th>領域</th><th class="num">問題数</th><th class="num">制限時間</th></tr></thead><tbody>'
+  +DATA.titles.map(function(t,i){
+      var n = i<4 ? DATA.parts[i].length+"問" : DATA.items.length+"項目";
+      var lim = DATA.limits[i]===null ? "なし（目安10分）" : (DATA.limits[i]/60)+"分";
+      return '<tr><td class="mono">第'+(i+1)+'部</td><td>'+t+'</td>'
+           + '<td class="num">'+n+'</td><td class="num">'+lim+'</td></tr>'; }).join("")
+  +'</tbody></table></div>'
+
+  +'<div class="note"><b>受検にあたってのお願い</b>'
+  +'・静かで中断されない環境と、安定したネットワーク接続をご用意ください。<br>'
+  +'・<strong>電卓、計算機能付き機器はご使用になれません。</strong>第2部はすべて筆算で解ける水準です。'
+  +'計算用の紙と筆記用具をお手元にご用意ください。<br>'
+  +'・第5部（性格・行動特性）に正解・不正解はありません。深く考えず、普段のご自身に'
+  +'最も近いものをお選びください。<br>'
+  +'・誤答による減点はありません。分からない場合も、いずれかを選んでお進みください。</div>'
+
+  +'<div class="note warn"><b>公正な受検のために</b>'
+  +'生成AI（ChatGPT、Claude等）、検索、書籍、他の方の助力を用いずに、'
+  +'ご自身の力のみで回答してください。本検査は入社後の配属や育成計画の検討にも用いるため、'
+  +'実際の力と異なる結果は、ご本人にとっても望ましくありません。</div>'
+
+  +'<div class="note"><b>取得する情報の取り扱い</b>'
+  +'ご記入いただく氏名・メールアドレスおよび回答内容は、<strong>採用選考の判断材料としてのみ</strong>'
+  +'利用します。本検査の結果は選考の一資料であり、これ単独で合否を決定するものではありません。'
+  +'取得した情報は選考終了後1年を目安に、復元できない方法で廃棄します。<br>'
+  +'体調・障害等により時間延長や別室受検などの配慮が必要な場合は、受検前に採用ご担当者まで'
+  +'お申し出ください。<strong>お申し出の有無が評価に影響することはありません。</strong></div>'
+
+  +'<h2 style="margin:40px 0 4px">受検者情報</h2>'
+  +'<p class="lead" style="margin-bottom:20px">回答ファイルに記録され、採用担当者が本人を特定するために使用します。</p>'
+  +'<div class="field"><label for="f-name">氏名<span class="req">必須</span></label>'
+  +'<input id="f-name" type="text" autocomplete="name" placeholder="山田 太郎"></div>'
+  +'<div class="field"><label for="f-mail">メールアドレス<span class="req">必須</span></label>'
+  +'<input id="f-mail" type="email" autocomplete="email" placeholder="taro.yamada@example.com"></div>'
+  +'<div class="field"><label for="f-code">受験番号（案内メールに記載がある場合）</label>'
+  +'<input id="f-code" type="text" placeholder="任意"></div>'
+
+  +'<label class="consent"><input type="checkbox" id="c1"><span>'
+  +'生成AI・検索・他者の助力を用いず、自分自身の力のみで回答することに同意します。</span></label>'
+  +'<label class="consent"><input type="checkbox" id="c2"><span>'
+  +'上記のとおり、氏名・メールアドレスおよび回答内容が採用選考の目的で利用されることに同意します。</span></label>'
+
+  +'<div class="navbar"><span class="status" id="introstat">氏名・メールアドレスの入力と、2つの同意が必要です</span>'
+  +'<button class="btn accent" id="start" disabled>第1部を開始する</button></div>'
+  +'</div>';
+
+  var f=["f-name","f-mail","c1","c2"].map(el);
+  function check(){
+    var ok = f[0].value.trim() && /\S+@\S+\.\S+/.test(f[1].value.trim()) && f[2].checked && f[3].checked;
+    el("start").disabled = !ok;
+    el("introstat").textContent = ok ? "準備ができました。開始すると第1部の計時が始まります。"
+                                     : "氏名・メールアドレスの入力と、2つの同意が必要です";
+    el("introstat").className = "status" + (ok?"":" miss");
+  }
+  f.forEach(function(x){ x.addEventListener("input",check); x.addEventListener("change",check); });
+  el("start").addEventListener("click", function(){
+    S.meta.name=f[0].value.trim(); S.meta.email=f[1].value.trim();
+    S.meta.code=el("f-code").value.trim(); S.meta.start=nowIso();
+    dirty=true; enterPart(0);
+  });
+  check();
+}
+
+function enterPart(i){
+  S.screen="p"+i; save(); render(); window.scrollTo(0,0);
+  startTimer(DATA.limits[i], null);
+  save();
+}
+
+function renderPart(i){
+  var app=el("app"), h="";
+  var over = S.parts.length && S.parts[S.parts.length-1].over && S.parts.length===i;
+  h += '<div class="screen">';
+  if(over) h += '<div class="note warn"><b>前の部は制限時間により終了しました</b>'
+             +  '未回答のまま終了した問題は無回答として記録されます。この部に集中してください。</div>';
+  h += '<p class="kicker mono">PART '+(i+1)+'</p><h2>第'+(i+1)+'部　'+DATA.titles[i]+'</h2>';
+  h += '<p class="lead">'+DATA.intros[i]+'</p>';
+  var n = i<4 ? DATA.parts[i].length+"問" : DATA.items.length+"項目";
+  var lim = DATA.limits[i]===null ? "制限なし（目安10分）" : (DATA.limits[i]/60)+"分";
+  h += '<div class="sec-meta"><span>問題数 <b>'+n+'</b></span><span>制限時間 <b>'+lim+'</b></span></div>';
+
+  if(i===4){
+    h += '<div class="likert-legend">'
+      +  '<div><b>5</b>よくあてはまる</div><div><b>4</b>ややあてはまる</div>'
+      +  '<div><b>3</b>どちらともいえない</div><div><b>2</b>あまりあてはまらない</div>'
+      +  '<div><b>1</b>まったくあてはまらない</div></div>';
+    h += '<div id="items">'+DATA.items.map(function(t,k){
+      var lk = [5,4,3,2,1].map(function(v){
+        return '<label><input type="radio" name="i'+(k+1)+'" value="'+v+'"><span>'+v+'</span></label>';
+      }).join("");
+      return '<div class="item" data-i="'+(k+1)+'"><div class="it-no mono">'+(k+1)+'</div>'
+           + '<div class="it-t">'+esc(t)+'</div><div class="lk">'+lk+'</div></div>';
+    }).join("")+'</div>';
+  } else {
+    h += DATA.parts[i].map(function(q,k){
+      var pre = "";
+      if(q.passage && DATA.passage){
+        pre = '<div class="passage"><p class="plabel">次の文章を読んで、問7から問9に答えてください。</p>'
+            + DATA.passage.map(function(p){ return '<p>'+esc(p)+'</p>'; }).join("")+'</div>';
+      }
+      var opts = q.opts.map(function(o,j){
+        return '<label class="opt"><input type="radio" name="q'+(k+1)+'" value="'+j+'">'
+             + '<span class="opt-mk">'+CH[j]+'</span><span class="opt-t">'+esc(o)+'</span></label>';
+      }).join("");
+      return pre + '<fieldset class="q"><legend class="q-legend"><span class="q-no mono">問 '+(k+1)
+           + '</span></legend><p class="q-text">'+q.q+'</p><div class="opts">'+opts+'</div></fieldset>';
+    }).join("");
+  }
+
+  h += '<div class="navbar"><span class="status" id="stat"></span>'
+    +  '<button class="btn accent" id="next">'
+    +  (i<4 ? "第"+(i+2)+"部へ進む" : "回答を確定して終了する")+'</button></div></div>';
+  app.innerHTML=h;
+  var scope=app.firstElementChild;   // 部ごとに作り直される要素。古いリスナーは一緒に破棄される
+
+  // 既存回答の復元
+  var saved=S.ans[i]||[];
+  var total = i===4 ? DATA.items.length : DATA.parts[i].length;
+  for(var k=0;k<total;k++){
+    var v=saved[k];
+    if(v===undefined || v===null || v<0) continue;
+    var nm = (i===4?"i":"q")+(k+1);
+    var input=document.querySelector('input[name="'+nm+'"][value="'+v+'"]');
+    if(input) input.checked=true;
+  }
+
+  function collect(){
+    if(S.screen!=="p"+i) return S.ans[i]||[];
+    var a=[];
+    for(var k=0;k<total;k++){
+      var nm=(i===4?"i":"q")+(k+1);
+      var c=document.querySelector('input[name="'+nm+'"]:checked');
+      a.push(c ? +c.value : (i===4?0:-1));
+    }
+    S.ans[i]=a; return a;
+  }
+  function missCount(){ var a=collect();
+    return a.filter(function(v){ return i===4 ? v===0 : v<0; }).length; }
+  function updateStat(){
+    var m=missCount();
+    var s=el("stat"); if(!s) return;
+    s.textContent = m===0 ? "全"+total+"件に回答済みです" : ("未回答 "+m+" 件 / 全"+total+"件");
+    s.className = "status"+(m?" miss":"");
+    save();
+  }
+  scope.addEventListener("change", function(e){
+    if(S.screen!=="p"+i) return;                 // 別の部に移った後は何もしない
+    if(e.target.type==="radio"){ dirty=true; updateStat(); }
+  });
+  updateStat();
+
+  el("next").addEventListener("click", function(){
+    var m=missCount();
+    if(m>0){
+      var msg = "未回答が"+m+"件あります。\n"
+        + (i<4 ? "このまま進むと、この部には戻れません。" : "このまま終了しますか。")
+        + "\n\nよろしいですか？";
+      if(!confirm(msg)) return;
+    }
+    finishPart(false);
+  });
+}
+
+function finishPart(auto){
+  var m=/^p(\d)$/.exec(S.screen); if(!m) return;
+  var i=+m[1];
+  // 現在の入力を確実に取り込む
+  var total = i===4 ? DATA.items.length : DATA.parts[i].length;
+  var a=[];
+  for(var k=0;k<total;k++){
+    var nm=(i===4?"i":"q")+(k+1);
+    var c=document.querySelector('input[name="'+nm+'"]:checked');
+    a.push(c ? +c.value : (i===4?0:-1));
+  }
+  S.ans[i]=a;
+  var limit = DATA.limits[i];
+  var used = limit===null ? null : (deadline===null ? limit : limit - Math.max(0,Math.ceil((deadline-Date.now())/1000)));
+  S.parts[i] = { p:i+1, sec: used, over: !!auto };
+  stopTimer();
+  if(i<4){ enterPart(i+1); }
+  else { S.meta.end=nowIso(); go("done"); }
+}
+
+/* ---------- 回答ファイル ---------- */
+function buildPayload(){
+  return { v:1, name:S.meta.name, email:S.meta.email, code:S.meta.code,
+           start:S.meta.start, end:S.meta.end, reloads:S.meta.reloads,
+           parts:S.parts, a1:S.ans[0], a2:S.ans[1], a3:S.ans[2], a4:S.ans[3], a5:S.ans[4] };
+}
+function buildFile(){
+  var p=buildPayload();
+  var js=JSON.stringify(p);
+  var sum=fnv1a(js);
+  var enc=chunk(b64(js),76);
+  var el2=[];
+  el2.push("==================================================================");
+  el2.push("  営業職 採用適性検査　回答ファイル");
+  el2.push("==================================================================");
+  el2.push("");
+  el2.push("氏名　　　　　： "+p.name);
+  el2.push("メールアドレス： "+p.email);
+  if(p.code) el2.push("受験番号　　　： "+p.code);
+  var ds=jdate(p.start), de=jdate(p.end);
+  el2.push("受検日時　　　： "+ds+" 〜 "+(ds.slice(0,10)===de.slice(0,10)?de.slice(11):de));
+  el2.push("所要時間　　　： "+dur(new Date(p.end)-new Date(p.start)));
+  el2.push("");
+  el2.push("回答状況：");
+  ["第1部 言語能力","第2部 数的処理","第3部 論理推理","第4部 状況判断"].forEach(function(t,i){
+    var a=p["a"+(i+1)], miss=a.filter(function(v){return v<0;}).length;
+    el2.push("  "+t+"　"+(a.length-miss)+" / "+a.length+" 問に回答");
+  });
+  var m5=p.a5.filter(function(v){return v===0;}).length;
+  el2.push("  第5部 性格・行動特性　"+(p.a5.length-m5)+" / "+p.a5.length+" 項目に回答");
+  el2.push("");
+  el2.push("このファイルは編集せず、そのまま採用ご担当者へご返送ください。");
+  el2.push("");
+  el2.push("------------------------------------------------------------------");
+  el2.push(" 以下は採点システムが読み取るためのデータです。編集しないでください。");
+  el2.push("------------------------------------------------------------------");
+  el2.push("CHECKSUM: "+sum);
+  el2.push("-----BEGIN ANSWER DATA-----");
+  el2.push(enc);
+  el2.push("-----END ANSWER DATA-----");
+  el2.push("");
+  return el2.join("\n");
+}
+function fileName(){
+  var d=new Date(), safe=(S.meta.name||"回答").replace(/[\\\/:*?"<>|\s]/g,"_");
+  return "適性検査回答_"+safe+"_"+d.getFullYear()+two(d.getMonth()+1)+two(d.getDate())+".txt";
+}
+
+function renderDone(){
+  stopTimer(); dirty=false; clearSaved();
+  var text=buildFile(), p=buildPayload();
+  var missAll=0;
+  [p.a1,p.a2,p.a3,p.a4].forEach(function(a){ missAll+=a.filter(function(v){return v<0;}).length; });
+  var miss5=p.a5.filter(function(v){return v===0;}).length;
+  el("app").innerHTML =
+   '<div class="screen"><p class="kicker mono">COMPLETE</p>'
+  +'<h1>お疲れさまでした</h1>'
+  +'<p class="lead">回答は以上です。<strong>下のボタンで回答ファイルを保存し、採用ご担当者へ'
+  +'メールでご返送ください。</strong>返送が完了するまで、このページを閉じないでください。</p>'
+  +'<div class="summary">'
+  +'<div><dt>受検者</dt><dd style="font-size:15px;font-family:inherit">'+esc(p.name)+'</dd></div>'
+  +'<div><dt>所要時間</dt><dd>'+dur(new Date(p.end)-new Date(p.start))+'</dd></div>'
+  +'<div><dt>能力4部 未回答</dt><dd class="'+(missAll?"miss":"")+'">'+missAll+'</dd></div>'
+  +'<div><dt>性格 未回答</dt><dd class="'+(miss5?"miss":"")+'">'+miss5+'</dd></div>'
+  +'</div>'
+  +'<div class="actions">'
+  +'<button class="btn accent" id="dl">回答ファイルを保存する</button>'
+  +'<button class="btn ghost" id="cp">本文をコピーする</button></div>'
+  +'<div class="note"><b>保存できない場合</b>'
+  +'「本文をコピーする」を押し、メール本文にそのまま貼り付けてご返送いただいても構いません。'
+  +'下の枠内がその内容です。</div>'
+  +'<textarea id="outbox" readonly spellcheck="false"></textarea>'
+  +'<div class="note warn" style="margin-top:26px"><b>ご返送先</b>'
+  +'保存したファイル（または上の本文）を、受検のご案内メールに返信する形でお送りください。'
+  +'ご不明な点は採用ご担当者までお問い合わせください。</div></div>';
+  el("outbox").value=text;
+  el("dl").addEventListener("click", function(){ saveFile(text); });
+  el("cp").addEventListener("click", function(){
+    var b=el("cp");
+    function done(ok){ b.textContent = ok?"コピーしました":"コピーできませんでした";
+      setTimeout(function(){ b.textContent="本文をコピーする"; },2200); }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){done(true);},function(){ legacy(); });
+    } else legacy();
+    function legacy(){ var t=el("outbox"); t.focus(); t.select();
+      var ok=false; try{ ok=document.execCommand("copy"); }catch(e){} done(ok); }
+  });
+}
+function saveFile(text){
+  var name=fileName();
+  try{
+    var blob=new Blob([text],{type:"text/plain;charset=utf-8"});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement("a");
+    a.href=url; a.download=name; a.style.display="none";
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); },1500);
+  }catch(e){
+    alert("お使いの環境ではファイルを保存できませんでした。\n「本文をコピーする」をご利用ください。");
+  }
+}
+
+/* ---------- boot ---------- */
+window.addEventListener("beforeunload", function(e){
+  if(dirty && S && S.screen!=="done" && S.screen!=="intro"){ e.preventDefault(); e.returnValue=""; }
+});
+
+(function boot(){
+  var saved=load();
+  if(saved && saved.s && saved.s.screen && saved.s.screen!=="intro" && saved.s.screen!=="done"){
+    S=saved.s;
+    S.meta.reloads=(S.meta.reloads||0)+1;
+    save();
+    paintChrome();
+    var m=/^p(\d)$/.exec(S.screen), i=m?+m[1]:0;
+    var left = saved.deadline ? Math.ceil((saved.deadline-Date.now())/1000) : null;
+    var msg = "前回の受検が途中で中断されています。\n\n"
+      + "「OK」で第"+(i+1)+"部から再開します"
+      + (DATA.limits[i]!==null && left!==null
+          ? "（残り時間 "+(left>0?fmt(left):"0:00")+"）。\n" : "。\n")
+      + "「キャンセル」を選ぶと、これまでの回答を破棄して最初からやり直します。";
+    if(confirm(msg)){
+      dirty=true; render();
+      if(DATA.limits[i]!==null){
+        if(saved.deadline && saved.deadline>Date.now()) startTimer(DATA.limits[i], saved.deadline);
+        else { finishPart(true); }
+      }
+      return;
+    }
+    clearSaved();
+  }
+  S=fresh(); render();
+})();
+</script>
+</body>
+</html>

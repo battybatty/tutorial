@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+</head>
+<body>
+<title>適性検査 採点ツール</title>
+<style>
+
+:root{
+  --paper:#F5F7FA; --surface:#FFFFFF; --surface-2:#EDF0F5;
+  --ink:#151C26; --ink-2:#4C5867; --ink-3:#7C8796;
+  --rule:#D6DCE4; --rule-2:#E7EBF1;
+  --indigo:#2E4E7E; --indigo-soft:#E9EEF6;
+  --vermilion:#B23A26; --vermilion-soft:#FAEDEA;
+  --green:#2F6B4F; --green-soft:#E8F1EC;
+  --on-accent:#FFFFFF;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#10141A; --surface:#161B23; --surface-2:#1D242E;
+  --ink:#E3E8EF; --ink-2:#A6B1C0; --ink-3:#78838F;
+  --rule:#2A323D; --rule-2:#222933;
+  --indigo:#8FB0DC; --indigo-soft:#1A2432;
+  --vermilion:#E4836A; --vermilion-soft:#2C1E1A;
+  --green:#7FBF9C; --green-soft:#152420;
+  --on-accent:#10141A;
+}}
+:root[data-theme="dark"]{
+  --paper:#10141A; --surface:#161B23; --surface-2:#1D242E;
+  --ink:#E3E8EF; --ink-2:#A6B1C0; --ink-3:#78838F;
+  --rule:#2A323D; --rule-2:#222933;
+  --indigo:#8FB0DC; --indigo-soft:#1A2432;
+  --vermilion:#E4836A; --vermilion-soft:#2C1E1A;
+  --green:#7FBF9C; --green-soft:#152420;
+  --on-accent:#10141A;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",
+    "Noto Sans JP",Meiryo,system-ui,sans-serif;
+  font-size:15px;line-height:1.85;-webkit-font-smoothing:antialiased}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace;
+  font-feature-settings:"tnum";font-variant-numeric:tabular-nums}
+.wrap{max-width:880px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif;
+  font-weight:600;letter-spacing:.02em;text-wrap:balance}
+a{color:var(--indigo)}
+button{font:inherit}
+.btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:var(--surface);
+  padding:12px 30px;font-size:15px;font-weight:500;cursor:pointer;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--rule)}
+.btn.accent{background:var(--indigo);border-color:var(--indigo);color:var(--on-accent)}
+:focus-visible{outline:2px solid var(--indigo);outline-offset:2px}
+.note{border:1px solid var(--rule);border-left:3px solid var(--indigo);
+  background:var(--surface);padding:16px 20px;margin:20px 0;font-size:13.5px;
+  line-height:1.8;color:var(--ink-2)}
+.note.warn{border-left-color:var(--vermilion);background:var(--vermilion-soft)}
+.note.ok{border-left-color:var(--green);background:var(--green-soft)}
+.note b{color:var(--ink);display:block;margin-bottom:5px;font-size:12px;letter-spacing:.1em}
+.kicker{font-size:11.5px;letter-spacing:.18em;color:var(--indigo);margin:0 0 10px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--rule-2);vertical-align:top}
+thead th{font-size:11px;letter-spacing:.1em;color:var(--ink-3);font-weight:500;
+  background:var(--surface-2);border-bottom:1px solid var(--rule);white-space:nowrap}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);background:var(--surface)}
+td.num,th.num{text-align:right;white-space:nowrap;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+
+.badge{display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;
+  letter-spacing:.14em;padding:2px 9px;border:1px solid var(--vermilion);color:var(--vermilion);
+  background:var(--vermilion-soft);vertical-align:middle;margin-left:12px}
+header.top{border-bottom:1px solid var(--rule);background:var(--surface);padding:16px 0}
+header.top h1{font-size:20px;margin:0;display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+.drop{border:2px dashed var(--rule);background:var(--surface);padding:34px 24px;text-align:center;
+  margin:28px 0;transition:border-color .15s,background .15s}
+.drop.over{border-color:var(--indigo);background:var(--indigo-soft)}
+.drop p{margin:0 0 14px;color:var(--ink-2);font-size:14px}
+.drop .sub{font-size:12.5px;color:var(--ink-3);margin:14px 0 0}
+#paste{width:100%;min-height:110px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:11.5px;padding:12px;border:1px solid var(--rule);background:var(--surface);color:var(--ink)}
+.sec{padding:34px 0 0}
+.sec h2{font-size:19px;margin:0 0 16px}
+tbody tr.row{cursor:pointer}
+tbody tr.row:hover{background:var(--indigo-soft)}
+tbody tr.row.sel{background:var(--indigo-soft);box-shadow:inset 3px 0 0 var(--indigo)}
+.g{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:700}
+.g.S,.g.A{color:var(--green)} .g.B{color:var(--ink)} .g.C,.g.D{color:var(--vermilion)}
+.flagchip{display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;
+  border:1px solid var(--vermilion);color:var(--vermilion);padding:0 6px;margin:1px 2px 1px 0}
+.err{color:var(--vermilion);font-size:13px}
+.detail{border:1px solid var(--rule);background:var(--surface);margin:24px 0 0}
+.detail-head{padding:18px 22px;border-bottom:1px solid var(--rule);background:var(--surface-2);
+  display:flex;justify-content:space-between;align-items:baseline;gap:14px;flex-wrap:wrap}
+.detail-head h3{margin:0;font-size:18px}
+.detail-head .meta{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--ink-3)}
+.dbody{padding:22px}
+.dgrid{display:grid;gap:22px}
+@media(min-width:760px){.dgrid{grid-template-columns:1fr 1fr}}
+.block h4{margin:0 0 10px;font-size:12px;letter-spacing:.12em;color:var(--indigo);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:500}
+.bars{display:grid;gap:7px}
+.bar{display:grid;grid-template-columns:118px 1fr 42px;gap:10px;align-items:center;font-size:13px}
+.bar .track{height:11px;background:var(--surface-2);border:1px solid var(--rule-2);position:relative}
+.bar .fill{position:absolute;inset:0 auto 0 0;background:var(--indigo)}
+.bar.lo .fill{background:var(--vermilion)}
+.bar.l .fill{background:var(--ink-3)}
+.bar .v{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;text-align:right}
+.sjt{display:grid;gap:2px}
+.sjt .r{display:grid;grid-template-columns:48px 30px 1fr;gap:10px;align-items:baseline;
+  padding:7px 10px;background:var(--paper);border:1px solid var(--rule-2);font-size:13px}
+.sjt .r.z{border-color:var(--vermilion);background:var(--vermilion-soft)}
+.sjt .p{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--ink-3)}
+.sjt .r.z .p{color:var(--vermilion);font-weight:700}
+.wrongs{display:grid;gap:8px}
+.wrong{padding:11px 14px;background:var(--paper);border:1px solid var(--rule-2);
+  border-left:3px solid var(--vermilion);font-size:13px;line-height:1.75}
+.wrong .h{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--ink-3);
+  margin-bottom:3px}
+.wrong .h b{color:var(--vermilion)}
+.flags{display:grid;gap:8px}
+.flag{display:grid;grid-template-columns:auto 1fr;gap:0 12px;padding:11px 14px;
+  background:var(--vermilion-soft);border:1px solid var(--vermilion);font-size:13px;line-height:1.7}
+.flag .n{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--vermilion)}
+.log{display:grid;gap:4px;font-size:12.5px;color:var(--ink-2)}
+.log .l{display:grid;grid-template-columns:130px 1fr;gap:10px}
+.log .l b{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:500;color:var(--ink-3)}
+.log .l.bad span{color:var(--vermilion)}
+</style>
+
+<header class="top"><div class="wrap"><h1>適性検査 採点ツール<span class="badge">社外秘</span></h1></div></header>
+<div class="wrap">
+
+<div class="sec">
+  <p class="lead" style="margin-bottom:0">候補者から返送された回答ファイル（.txt）を読み込むと、
+  第1〜4部の採点、SJTの重み付け集計、性格6尺度とライスケールの算出、重点確認事項の判定までを自動で行います。
+  複数名をまとめて読み込めます。<strong>ファイルはこのブラウザの中だけで処理され、どこにも送信されません。</strong></p>
+
+  <div class="drop" id="drop">
+    <p>回答ファイル（.txt）をここにドラッグ＆ドロップ</p>
+    <button class="btn ghost" id="pick">ファイルを選ぶ</button>
+    <input type="file" id="file" accept=".txt,text/plain" multiple hidden>
+    <p class="sub">メール本文で受け取った場合は、下の枠に貼り付けて「読み込む」を押してください。</p>
+  </div>
+  <textarea id="paste" spellcheck="false" placeholder="メール本文をここに貼り付け（複数名を続けて貼っても構いません）"></textarea>
+  <div style="display:flex;gap:12px;margin:12px 0 0;flex-wrap:wrap">
+    <button class="btn ghost" id="loadpaste">貼り付けた内容を読み込む</button>
+    <button class="btn ghost" id="clearall">読み込み結果をすべて消去</button>
+  </div>
+</div>
+
+<div class="sec" id="resultsec" hidden>
+  <h2>採点結果</h2>
+  <div class="tablewrap"><table id="tbl">
+    <thead><tr>
+      <th>氏名</th><th class="num">言語</th><th class="num">数的</th><th class="num">論理</th>
+      <th class="num">SJT</th><th class="num">合計</th><th>段階</th>
+      <th class="num">A</th><th class="num">B</th><th class="num">C</th>
+      <th class="num">D</th><th class="num">E</th><th class="num">F</th><th class="num">L</th>
+      <th>確認事項</th>
+    </tr></thead><tbody id="tbody"></tbody>
+  </table></div>
+  <p class="lead" style="font-size:13px;margin:12px 0 0">行をクリックすると詳細が表示されます。
+  A〜Fは1〜5の段階、Lはライスケールの平均値です。</p>
+  <div id="detail"></div>
+
+  <h2 style="margin-top:40px">CSV書き出し</h2>
+  <textarea id="csv" readonly spellcheck="false"
+    style="width:100%;min-height:120px;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;
+    padding:12px;border:1px solid var(--rule);background:var(--surface);color:var(--ink-2)"></textarea>
+  <div style="display:flex;gap:12px;margin:12px 0 40px;flex-wrap:wrap">
+    <button class="btn ghost" id="copycsv">CSVをコピー</button>
+    <button class="btn ghost" id="savecsv">CSVを保存</button>
+  </div>
+</div>
+
+<div class="note warn" style="margin:0 0 48px"><b>取り扱い</b>
+本ツールは解答キー・配点・性格検査の尺度キーを含みます。<strong>候補者に共有しないでください。</strong>
+採点結果は選考の一資料であり、これ単独で合否を決定するものではありません。
+性格特性に優劣はなく、心身の健康状態や障害の有無を推知する目的で用いてはいけません。</div>
+</div>
+
+<script>
+"use strict";
+var K = {"k1": [0, 3, 1, 2, 3, 0, 1, 2, 3, 2], "k2": [1, 2, 2, 0, 3, 2, 1, 3, 0, 1, 3, 0], "k3": [0, 3, 2, 1, 3, 2, 1, 0], "pts4": [[0, 1, 3, 2], [0, 1, 2, 3], [0, 1, 3, 2], [1, 3, 2, 0], [3, 0, 2, 1], [0, 1, 2, 3], [3, 1, 0, 2], [1, 3, 2, 0], [3, 2, 1, 0], [0, 1, 3, 2]], "q1": [{"q": "取引先に対し、自社の営業部長である田中の発言を伝える場面です。言葉づかいとして最も適切なものを1つ選びなさい。", "exp": "社外に対して自社の人間を指すときは役職を名前の前に置き、謙譲語「申す」を用いる。イは尊敬語で誤り。ウの「申される」は謙譲語に尊敬の助動詞を重ねた誤用。エは二重敬語。"}, {"q": "「忸怩（じくじ）たる思い」の意味として最も適切なものを1つ選びなさい。", "exp": "「忸怩」は自分の言動を恥じ入るさま。「悔しい・腹立たしい」の意で用いる誤用が広く見られるため、識別力の高い設問。"}, {"q": "「万年筆：文房具」と同じ関係になる組み合わせを1つ選びなさい。", "exp": "「万年筆 ⊂ 文房具」は包含（下位語：上位語）の関係。アは人と場所、ウは道具と用途、エは原因と対処。"}, {"q": "「気が置けない」を正しく用いている文を1つ選びなさい。", "exp": "「気が置けない」は「遠慮する必要がない、気楽に付き合える」の意。ア・イ・エはいずれも「油断できない」の意で用いた誤用。"}, {"q": "次のア〜エの文を、意味が通るように並べ替えたとき、<em>3番目</em>にくる文を1つ選びなさい。", "exp": "正しい順序は <b>イ → ア → エ → ウ</b>。イが主題提示、アがその理由（「〜からである」）、エが帰結（「結果として」）、ウが結論（「そのため」）。3番目はエ。"}, {"q": "手紙の書き出しに「前略」を用いたとき、結語として適切なものを1つ選びなさい。", "exp": "「前略」の結語は「草々」。「拝啓」→「敬具」、「謹啓」→「謹白」。「拝復」は返信の頭語であり結語ではない。"}, {"q": "本文によれば、有望な商談が消滅する最大の原因は何か。最も適切なものを1つ選びなさい。", "exp": "第1段落「案件が消滅する最大の原因は競合への失注ではなく、意思決定そのものの先送りである」に一致。"}, {"q": "本文において、「先送り」が起きる理由として筆者が挙げているものを1つ選びなさい。", "exp": "第2段落に一致。アは「担当者が製品の優劣を判断できないからではない」と本文が明確に否定している。"}, {"q": "本文の主張と最も合致するものを1つ選びなさい。", "exp": "第3段落の主張そのもの。アは「提案書の巧拙よりも」と本文が否定。イ・ウは本文に記述がない。"}, {"q": "次の文の空欄に入る語として最も適切なものを1つ選びなさい。<br>「製品の欠陥により顧客に損害が生じた場合、当社は契約に定める範囲で損害を（　　）する。」", "exp": "損害を埋め合わせるのは「補償」。「保障」は地位・状態を守ること（社会保障）、「保証」は品質・債務を請け合うこと（品質保証）。「補障」という語はない。"}], "q2": [{"q": "定価12,000円の商品を15%引きで販売した。販売価格はいくらか。", "exp": "12,000 × 0.85 ＝ <b>10,200円</b>"}, {"q": "仕入原価8,000円の商品に、原価の25%にあたる利益を上乗せして定価をつけた。定価はいくらか。", "exp": "8,000 × 1.25 ＝ <b>10,000円</b>"}, {"q": "ある商品に原価の40%増しで定価をつけ、定価の20%引きで販売したところ、1個あたり240円の利益が出た。この商品の原価はいくらか。", "exp": "原価を x とすると 1.4x × 0.8 ＝ 1.12x。利益 0.12x ＝ 240 より <b>x ＝ 2,000円</b>（検算：定価2,800円 → 売価2,240円 → 利益240円）"}, {"q": "ある営業所の月間売上目標は1,500万円である。第1週420万円、第2週380万円、第3週310万円の実績であった。第4週で目標を達成するには、最低いくらの売上が必要か。", "exp": "1,500 −（420＋380＋310）＝ 1,500 − 1,110 ＝ <b>390万円</b>"}, {"q": "昨年度の売上が8,400万円、今年度の売上が9,660万円であった。対前年成長率はいくらか。", "exp": "9,660 ÷ 8,400 ＝ 1.15 → <b>15%</b>。誤答ウ13%は、増加額1,260を今年度売上で割る誤り。"}, {"q": "新規訪問100件のうち、商談化したものが25件、そのうち受注に至ったものが8件であった。<em>商談化した案件のうち</em>、受注に至った割合はいくらか。", "exp": "8 ÷ 25 ＝ <b>32%</b>。誤答ア8%は全訪問比、イ25%は商談化率。設問が問う母数を取り違えていないかを見る。"}, {"q": "ある営業リストの作成にあたり、Aさん1人では6時間、Bさん1人では12時間かかる。2人が同時に取りかかった場合、完成までに何時間かかるか。", "exp": "1/6 ＋ 1/12 ＝ 1/4 → <b>4時間</b>。誤答エ9時間は単純平均。"}, {"q": "営業担当5名の今月の受注件数は、12件、8件、15件、9件、11件であった。ここに6人目が加わり、6名の平均受注件数が12件になるためには、6人目は何件受注する必要があるか。", "exp": "5名の合計55件。6名で平均12件なら合計72件。72 − 55 ＝ <b>17件</b>"}, {"q": "ある商品を定価から10%引きし、さらに会員割引として5%引きした。定価に対して合計何%引きに相当するか。", "exp": "0.9 × 0.95 ＝ 0.855 → 1 − 0.855 ＝ <b>14.5%引き</b>。誤答イ15%は割引率の単純加算。実務で頻出の誤り。"}, {"q": "得意先A社まで、時速40kmで45分かかる。自社からA社までを往復した場合の走行距離は何kmか。", "exp": "片道 40 × 3/4 ＝ 30km、往復 <b>60km</b>。誤答ア30kmは片道のまま答えたもの。"}, {"q": "現在3件の商談を抱えており、それぞれの受注確率は独立に50%、40%、25%と見積もられている。少なくとも1件を受注できる確率はいくらか。", "exp": "1 −（0.5 × 0.6 × 0.75）＝ 1 − 0.225 ＝ <b>77.5%</b>。余事象を使えるかを見る。"}, {"q": "担当する顧客120社のうち、製品Aを導入しているのが58社、製品Bを導入しているのが47社、両方を導入しているのが21社であった。どちらも導入していない顧客は何社か。", "exp": "いずれかを導入 58＋47−21 ＝ 84社。120 − 84 ＝ <b>36社</b>。誤答エ84社は「いずれかを導入した社数」。"}], "q3": [{"q": "「当社が提案書を提出した顧客は、全員が見積もりを依頼している」が正しいとき、<em>確実に言える</em>ことを1つ選びなさい。", "exp": "「P → Q」が真のとき確実に言えるのは対偶「¬Q → ¬P」のみ。イは逆、ウは裏、エは逆の言い換えで、いずれも成立しない。"}, {"q": "「すべての優秀な営業担当者は、商談後に記録を残している」「田中氏は商談後に記録を残している」の2つが正しいとき、<em>確実に言える</em>ことを1つ選びなさい。", "exp": "「優秀 → 記録あり」の対偶「記録なし → 優秀でない」のみが確実。アは後件肯定の誤り。"}, {"q": "A〜Eの5名の今月の売上には順位があり、同順位はない。次の条件がすべて成り立つとき、<em>3位</em>は誰か。<br>① AはBより上位　② CはDより下位　③ EはAのすぐ下の順位　④ Bは4位　⑤ Dは1位ではない", "exp": "B＝4位。①よりA∈{1,2,3}、③よりEはAの直下。A＝2ならE＝3で残る1・5位にC,D、②よりD＝1となり⑤に反する。A＝3ならE＝4でBと衝突。よって<b>A＝1、E＝2</b>、残る3・5位に②よりD＝3、C＝5。順位は <b>A → E → D → B → C</b>。3位はD。"}, {"q": "佐藤・鈴木・高橋の3名は、製造・小売・金融のいずれか異なる業種を1つずつ担当している。今月の受注件数はそれぞれ3件・5件・8件のいずれかで、すべて異なる。次の条件がすべて成り立つとき、<em>確実に言える</em>ことを1つ選びなさい。<br>① 佐藤は金融担当ではない　② 製造担当の受注は5件　③ 鈴木の受注は8件　④ 高橋は小売担当ではない", "exp": "条件を満たす組み合わせは2通りある。<b>① 佐藤＝製造5件／鈴木＝小売8件／高橋＝金融3件</b>、<b>② 佐藤＝小売3件／鈴木＝金融8件／高橋＝製造5件</b>。ア・ウ・エはいずれか一方でしか成り立たない。両方に共通して言えるのはイのみ。一意に決まらない条件から結論を出さないことを見る設問。"}, {"q": "営業部の定例会議は、月曜・火曜・水曜・木曜のいずれか1日に行われる。次の3つの情報のうち、<em>2つは正しく、1つは誤っている</em>。会議は何曜日か。<br>① 会議は月曜日ではない　② 会議は火曜日である　③ 会議は水曜日ではない", "exp": "各曜日について正しい情報の数を数える。月＝1個、火＝3個、水＝1個、<b>木＝2個</b>。条件を満たすのは木曜のみ。"}, {"q": "次の2つが正しいとき、<em>確実に言える</em>ことを1つ選びなさい。<br>① 提案研修を受講した社員は、全員が月10件以上の商談を行っている<br>② 月10件以上の商談を行っている社員の中には、入社1年目の社員も含まれる", "exp": "ウは①の対偶。イは裏、アは逆で誤り。エは②から「10件以上の中に1年目がいる」とは言えても、その1年目が研修受講者とは限らないため確実ではない。"}, {"q": "ある営業所の月間受注件数が、次のように一定の規則で推移している。□に入る数はいくつか。<br>　3、6、11、18、27、□", "exp": "階差が 3, 5, 7, 9 と2ずつ増える。次の階差は11 → 27 ＋ 11 ＝ <b>38</b>（一般項 n² ＋ 2）。誤答ア36は階差を9のままにした誤り。"}, {"q": "A社〜E社の5社を、1日で1社ずつ、計5社訪問する。次の条件がすべて成り立つとき、<em>4番目</em>に訪問するのはどこか。<br>① A社の次にB社を訪問する　② C社を最初に訪問する　③ D社はB社より前に訪問する　④ E社は3番目", "exp": "C＝1番目、E＝3番目。A→Bが連続で入る枠は(4,5)のみ（(2,3)はE＝3のため不可）。よってA＝4、B＝5、残る2番目がDで③も満たす。訪問順は <b>C → D → E → A → B</b>。4番目はA社。"}], "q4": [{"opts": ["確定情報ではないため、遅延が確実になってから顧客に連絡する。", "生産部門に納期短縮を強く要請し、結果が出るまで顧客への連絡は保留する。", "ただちに顧客に一次連絡を入れ、判明している事実と社内で調整中であることを伝えたうえで、代替案の提示時期を約束する。", "上司にメールで報告し、上司から顧客に連絡してもらうよう依頼する。"], "obs": "悪い知らせを早く伝える姿勢／説明責任"}, {"opts": ["受注を確実にするため、その場で要求額まで値引きすることを約束する。", "自社製品の値引きはできないと伝えたうえで、競合製品の品質上の問題点を強調する。", "「これ以上は下げられません」と即答し、価格の話を打ち切る。", "競合との条件差（保守範囲・納期・実績など）を確認したうえで、価格差の根拠を説明し、価格以外の条件も含めた見直し案を検討すると伝える。"], "obs": "価値訴求と価格規律／権限の自覚"}, {"opts": ["顧客が重視していない点なので、あえて触れずに契約を進める。", "誤解に気づいたことを社内にだけ共有し、顧客には伝えない。", "契約前に誤解を正し、正確な仕様を説明したうえで、あらためて意思を確認する。", "契約を済ませたうえで、導入時にあらためて説明する。"], "obs": "誠実性／短期の受注より長期の信頼"}, {"opts": ["担当外であることを伝え、同僚が戻り次第折り返すと伝えて電話を切る。", "まず状況を聴き取って一次対応を行い、内容を記録して同僚と上司に速やかに共有する。", "自分の判断で対応をすべて引き取り、解決してから同僚に報告する。", "顧客に同僚の携帯番号を伝え、直接連絡してもらう。"], "obs": "チーム連携／情報共有と記録"}, {"opts": ["今月中の発注が顧客にとっても合理的かを検討し、根拠がある場合に限り、条件を明示したうえで打診する。", "「今月中なら特別価格になる」と、実際にはない条件を提示して発注を促す。", "顧客との関係を頼りに、自分の事情を説明して個人的な配慮として発注を依頼する。", "いったん今月で受注処理し、来月あらためて正式な契約書を交わす。"], "obs": "顧客本位／売上計上の適正性"}, {"opts": ["取引継続を優先し、自費で対応する。", "角が立たないよう曖昧に受け流し、社内には報告しない。", "その場で強く拒否し、担当者の姿勢を批判する。", "その場では明確に応じず、要求の内容を記録したうえで、上司およびコンプライアンス部門に速やかに報告し、対応方針の指示を仰ぐ。"], "obs": "コンプライアンス／利益相反の処理"}, {"opts": ["まず最後まで話を聴き、事実関係と発生状況を確認したうえで、責任の所在を断定せずに調査と復旧の手順を提示する。", "早い段階で「こちらに非はありません」と伝え、顧客側の誤操作であることを説明する。", "原因が不明なうちから全面的に非を認め、その場で補償を約束する。", "技術部門の担当者にそのまま電話を転送する。"], "obs": "傾聴と事実確認／感情の統制／権限の自覚"}, {"opts": ["商談を優先し、提案書は期限を過ぎてから提出する。", "両方の重要度と期限の動かしやすさを整理し、早い段階で上司に状況を報告して、分担または日程調整を相談する。", "提案書を優先し、商談は当日に日程変更を申し入れる。", "徹夜してでも両方を1人でこなす。"], "obs": "優先順位づけ／報告・相談"}, {"opts": ["前任者に後任者の紹介を依頼し、これまでの経緯・課題・合意事項を整理した資料を用意して、早期に後任者と面談の場を持つ。", "後任者からの連絡を待ち、依頼があってから対応する。", "関係を一から作り直すことになるため、当面は様子を見る。", "前任者の異動先に営業を継続し、後任者への対応は最小限にとどめる。"], "obs": "関係構築の先読み／引き継ぎ設計"}, {"opts": ["自社の提案に有利に働くため、その情報をもとに価格を設定して提案する。", "より詳しい内容を聞き出し、社内で共有する。", "深追いせずに話題を変え、その情報を提案の根拠としては用いない。取り扱いに迷う場合は上司に相談する。", "競合他社に事実確認の連絡を入れる。"], "obs": "情報倫理／競争上の公正"}], "scales": {"A": {"name": "達成志向", "items": [1, 7, 13, 19, 26, 32, 38, 45, 51]}, "B": {"name": "対人影響力", "items": [2, 8, 14, 20, 27, 33, 39, 46, 52]}, "C": {"name": "ストレス耐性", "items": [3, 9, 15, 21, 28, 34, 40, 47, 53]}, "D": {"name": "誠実性・コンプライアンス", "items": [4, 16, 22, 29, 35, 42, 48, 54]}, "E": {"name": "自律・行動力", "items": [5, 11, 17, 23, 30, 36, 43, 49]}, "F": {"name": "協調・チーム貢献", "items": [6, 12, 18, 24, 31, 37, 44, 50]}, "L": {"name": "回答態度（ライスケール）", "items": [10, 25, 41, 55, 56]}}, "reverse": [16, 20, 22, 28, 30, 37, 49], "items": ["高い目標を掲げ、達成に向けて粘り強く取り組むほうだ", "初対面の人とでも、すぐに打ち解けて話ができる", "強いプレッシャーのかかる場面でも、冷静さを保てる", "ルールや手続きは、多少非効率でも守るべきだと思う", "指示を待たず、自分で必要なことを見つけて動くほうだ", "チームの成果のために、自分の役割以外の仕事も引き受ける", "目標が未達のまま月を終えると、強く悔しさを感じる", "相手の立場や関心に合わせて、話の内容を変えることができる", "失敗を引きずらず、気持ちを切り替えるのが早い", "これまで、約束の期限を破ったことは一度もない", "やると決めたことは、周囲に言われなくても最後までやり切る", "同僚が困っているときは、自分から声をかけて手伝う", "競争のある環境のほうが力を発揮できる", "意見が対立したとき、相手が納得できる説明ができる", "断られたり否定されたりしても、あまり落ち込まない", "数字を良く見せるための多少の誇張は、営業では必要だと思う", "新しい仕事は、やり方が決まっていなくても自分から進められる", "チームの決定には、自分の意見と違っても協力する", "現状に満足せず、より高い水準を求めるほうだ", "人と話すことにエネルギーを使い、疲れてしまうことが多い", "予定が急に変わっても、動揺せずに対応できる", "少額であれば、経費の使途を厳密に記録しなくてもよいと思う", "誰かに言われる前に、自分から改善策を提案することが多い", "自分個人の成果より、チーム全体の成果を優先して考える", "これまで、他人の悪口を言ったことは一度もない", "目標達成のために、日々の行動量を自分で管理している", "人の名前や関心事を覚えるのが得意だ", "うまくいかない日が続くと、やる気が大きく下がってしまう", "顧客に不利な情報でも、必要であれば正直に伝える", "慣れない状況では、誰かの指示を待つほうが安心だ", "他部門と連携して物事を進めるのが得意だ", "達成した目標より、次の課題に意識が向く", "相手の話を最後まで聴いてから、自分の意見を述べる", "厳しい指摘を受けても、感情的にならずに受け止められる", "社内規程に反する指示であれば、上司の指示でも従わない", "新しい進め方を試すことに抵抗がない", "自分の担当外のことには、あまり口を出さないほうがよい", "結果が出るまで努力を続けることに、苦痛を感じない", "大勢の前で話すことに、抵抗を感じない", "気持ちの落ち込みを、翌日に持ち越すことは少ない", "これまで、うそをついたことは一度もない", "誰も見ていない場面でも、手順どおりに仕事を進める", "前例のない依頼でも、まず自分で調べて対応してみる", "成果を上げた同僚を、素直に称賛できる", "目標は、達成可能な水準より少し高めに設定したい", "相手の本音を引き出す質問を考えるのが得意だ", "忙しい時期でも、体調や生活のリズムを保てる", "顧客の要望であっても、契約範囲を超えることは受けない", "指示された範囲を超えて動くのは、避けたほうがよい", "情報は自分で抱えず、チームに共有するほうだ", "人と競って勝つことに喜びを感じる", "初対面の相手からも信頼されやすいほうだ", "想定外のトラブルが起きても、落ち着いて優先順位をつけられる", "業務上知り得た情報を、社外で話題にすることはない", "これまで、遅刻をしたことは一度もない", "どんな相手に対しても、いらだちを感じたことはない"]};
+var CH = ["ア","イ","ウ","エ"];
+var results = [], selected = -1;
+
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+function two(n){ return (n<10?"0":"")+n; }
+function fnv1a(str){ var h=0x811c9dc5;
+  for(var i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=(h+((h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24)))>>>0; }
+  return ("0000000"+h.toString(16)).slice(-8); }
+function jdate(d){ if(!d) return "—"; var x=new Date(d);
+  return x.getFullYear()+"-"+two(x.getMonth()+1)+"-"+two(x.getDate())+" "+two(x.getHours())+":"+two(x.getMinutes()); }
+function mmss(s){ if(s===null||s===undefined) return "—"; return Math.floor(s/60)+"分"+two(s%60)+"秒"; }
+
+/* ---------- 解析 ---------- */
+function parseOne(text){
+  var m=/-----BEGIN ANSWER DATA-----([\s\S]*?)-----END ANSWER DATA-----/.exec(text);
+  if(!m) return {err:"回答データのブロックが見つかりません"};
+  var raw=m[1].replace(/[^A-Za-z0-9+/=]/g,"");
+  var json;
+  try{
+    var bin=atob(raw), bytes=new Uint8Array(bin.length);
+    for(var i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+    json=new TextDecoder("utf-8").decode(bytes);
+  }catch(e){ return {err:"データを復号できません。ファイルが途中で切れている可能性があります"}; }
+  var p; try{ p=JSON.parse(json); }catch(e){ return {err:"データの形式が不正です"}; }
+  if(!p.a1||!p.a5) return {err:"回答が含まれていません"};
+  var cm=/CHECKSUM:\s*([0-9a-f]{8})/i.exec(text);
+  var ck = cm ? (fnv1a(json)===cm[1].toLowerCase()) : null;
+  return {p:p, checksum:ck};
+}
+function parseAll(text){
+  var out=[], re=/-----BEGIN ANSWER DATA-----[\s\S]*?-----END ANSWER DATA-----/g, m, last=0;
+  while((m=re.exec(text))!==null){
+    out.push(parseOne(text.slice(last, m.index+m[0].length)));
+    last=m.index+m[0].length;
+  }
+  if(!out.length) out.push({err:"回答データのブロックが見つかりません"});
+  return out;
+}
+
+/* ---------- 採点 ---------- */
+function grade(t){ return t>=72?"S":t>=59?"A":t>=45?"B":t>=32?"C":"D"; }
+function stage(mean){ return mean>=4.3?5:mean>=3.8?4:mean>=3.2?3:mean>=2.6?2:1; }
+
+function score(p){
+  var r={p:p};
+  function pc(ans,key){ var c=0,w=[];
+    for(var i=0;i<key.length;i++){ if(ans[i]===key[i]) c++; else w.push(i); }
+    return {n:c, wrong:w, miss:ans.filter(function(v){return v<0;}).length}; }
+  r.c1=pc(p.a1,K.k1); r.c2=pc(p.a2,K.k2); r.c3=pc(p.a3,K.k3);
+  r.s1=r.c1.n*2; r.s2=r.c2.n*2; r.s3=r.c3.n*2;
+  r.sjt=[]; r.s4=0;
+  for(var i=0;i<K.pts4.length;i++){
+    var v=p.a4[i], pt = (v>=0 && v<4) ? K.pts4[i][v] : 0;
+    r.s4+=pt; r.sjt.push({i:i, v:v, pt:pt});
+  }
+  r.total=r.s1+r.s2+r.s3+r.s4;
+  r.grade=grade(r.total);
+  r.rate=[r.s1/20, r.s2/24, r.s3/16, r.s4/30];
+  r.spread=Math.round((Math.max.apply(null,r.rate)-Math.min.apply(null,r.rate))*100);
+
+  r.scales={};
+  Object.keys(K.scales).forEach(function(k){
+    var items=K.scales[k].items, sum=0, n=0, miss=0;
+    items.forEach(function(no){
+      var v=p.a5[no-1];
+      if(!v){ miss++; return; }
+      sum += K.reverse.indexOf(no)>=0 ? (6-v) : v; n++;
+    });
+    var mean = n ? sum/n : 0;
+    r.scales[k]={mean:mean, raw:sum, n:n, miss:miss, stage:n?stage(mean):null};
+  });
+  r.L=r.scales.L.mean;
+  r.Ljudge = r.L>=4.2 ? "要注意" : r.L>=3.5 ? "やや高" : "標準";
+
+  var zeros=r.sjt.filter(function(x){return x.pt===0;});
+  var integ=[2,4,5,9].filter(function(i){ return r.sjt[i].pt===0; });
+  r.flags=[];
+  if(zeros.length>=2) r.flags.push([1,"SJTで0点の選択肢が"+zeros.length+"問（第"
+    +zeros.map(function(x){return x.i+1;}).join("・")+"問）。判断の理由を本人に説明してもらい、経験不足か判断傾向かを切り分ける。"]);
+  if(integ.length) r.flags.push([2,"SJTの誠実性・コンプライアンス系（第"
+    +integ.map(function(i){return i+1;}).join("・")+"問）が0点。過去に「短期の成果」と「正しさ」が対立した場面での判断を聞く。"]);
+  if(r.scales.D.stage!==null && r.scales.D.stage<=2) r.flags.push([3,"性格D（誠実性）が段階"
+    +r.scales.D.stage+"。上記2と併せて確認し、両方に懸念がある場合は慎重に判断する。"]);
+  if(r.L>=4.2) r.flags.push([4,"L尺度平均 "+r.L.toFixed(2)+"。自己呈示が強い可能性。"
+    +"他尺度は参考程度にとどめ、面接では「どう考えるか」ではなく「実際に何をしたか」を聞く。"]);
+  if(r.total<=44) r.flags.push([5,"能力合計が段階"+r.grade
+    +"。弱い領域が担当予定業務に直結するか、ツールや体制で補える範囲かを判断する。"]);
+  if(r.spread>=40) r.flags.push([6,"各部の得点率の最大差が"+r.spread
+    +"ポイント。特定領域の苦手が業務上のボトルネックになるかを確認する。"]);
+  if(r.scales.A.stage===5 && r.scales.D.stage!==null && r.scales.D.stage<=2)
+    r.flags.push([7,"達成志向が段階5、誠実性が段階"+r.scales.D.stage
+      +"。成果を優先して手続きや顧客利益を軽視する傾向がないか、具体例で確認する。"]);
+
+  r.log=[];
+  var missAbility=r.c1.miss+r.c2.miss+r.c3.miss+p.a4.filter(function(v){return v<0;}).length;
+  var miss5=p.a5.filter(function(v){return !v;}).length;
+  (p.parts||[]).forEach(function(pp,i){
+    if(!pp) return;
+    r.log.push({k:"第"+(i+1)+"部 所要", v:mmss(pp.sec)+(pp.over?"（制限時間により終了）":""), bad:!!pp.over});
+  });
+  r.log.push({k:"能力4部 未回答", v:missAbility+"問", bad:missAbility>0});
+  r.log.push({k:"性格 未回答", v:miss5+"項目", bad:miss5>0});
+  r.log.push({k:"再読み込み", v:(p.reloads||0)+"回", bad:(p.reloads||0)>=2});
+  r.missAbility=missAbility; r.miss5=miss5;
+  return r;
+}
+
+/* ---------- 描画 ---------- */
+function addResults(list){
+  list.forEach(function(x){
+    if(x.err){ results.push({err:x.err}); return; }
+    var r=score(x.p); r.checksum=x.checksum; results.push(r);
+  });
+  paint();
+}
+function paint(){
+  el("resultsec").hidden = results.length===0;
+  var tb=el("tbody"); tb.innerHTML="";
+  results.forEach(function(r,idx){
+    var tr=document.createElement("tr");
+    if(r.err){
+      tr.innerHTML='<td colspan="15" class="err">読み込めませんでした：'+esc(r.err)+'</td>';
+      tb.appendChild(tr); return;
+    }
+    tr.className="row"+(idx===selected?" sel":"");
+    var sc=r.scales;
+    function st(k){ return sc[k].stage===null?"—":sc[k].stage; }
+    tr.innerHTML='<td>'+esc(r.p.name||"（無記名）")
+      +(r.checksum===false?' <span class="flagchip">改変の疑い</span>':'')+'</td>'
+      +'<td class="num">'+r.s1+'</td><td class="num">'+r.s2+'</td><td class="num">'+r.s3+'</td>'
+      +'<td class="num">'+r.s4+'</td><td class="num"><b>'+r.total+'</b></td>'
+      +'<td class="g '+r.grade+'">'+r.grade+'</td>'
+      +'<td class="num">'+st("A")+'</td><td class="num">'+st("B")+'</td><td class="num">'+st("C")+'</td>'
+      +'<td class="num">'+st("D")+'</td><td class="num">'+st("E")+'</td><td class="num">'+st("F")+'</td>'
+      +'<td class="num">'+r.L.toFixed(1)+'</td>'
+      +'<td>'+(r.flags.length?r.flags.map(function(f){
+          return '<span class="flagchip">'+("0"+f[0]).slice(-2)+'</span>';}).join(""):"—")+'</td>';
+    tr.addEventListener("click", function(){ selected=idx; paint(); });
+    tb.appendChild(tr);
+  });
+  renderDetail();
+  renderCsv();
+}
+function bar(label,st,mean,cls){
+  var pct = mean ? Math.max(0,Math.min(100,(mean-1)/4*100)) : 0;
+  return '<div class="bar '+(cls||"")+'"><span>'+label+'</span>'
+    +'<span class="track"><span class="fill" style="width:'+pct.toFixed(1)+'%"></span></span>'
+    +'<span class="v">'+(mean?mean.toFixed(2):"—")+'</span></div>';
+}
+function renderDetail(){
+  var d=el("detail");
+  if(selected<0 || !results[selected] || results[selected].err){ d.innerHTML=""; return; }
+  var r=results[selected], p=r.p, sc=r.scales;
+  var h='<div class="detail"><div class="detail-head">'
+    +'<h3>'+esc(p.name||"（無記名）")+'</h3>'
+    +'<span class="meta">'+esc(p.email||"")+(p.code?"　/　"+esc(p.code):"")
+    +'　/　'+jdate(p.start)+'</span></div><div class="dbody">';
+
+  h+='<div class="tablewrap" style="margin:0 0 22px"><table><thead><tr>'
+    +'<th>領域</th><th class="num">得点</th><th class="num">満点</th><th class="num">得点率</th>'
+    +'</tr></thead><tbody>'
+    +[["第1部 言語能力",r.s1,20],["第2部 数的処理",r.s2,24],["第3部 論理推理",r.s3,16],
+      ["第4部 状況判断",r.s4,30]].map(function(x){
+      return '<tr><td>'+x[0]+'</td><td class="num">'+x[1]+'</td><td class="num">'+x[2]+'</td>'
+        +'<td class="num">'+Math.round(x[1]/x[2]*100)+'%</td></tr>';}).join("")
+    +'<tr><td><b>能力合計</b></td><td class="num"><b>'+r.total+'</b></td><td class="num">90</td>'
+    +'<td class="num">'+Math.round(r.total/90*100)+'%　段階 <span class="g '+r.grade+'">'+r.grade+'</span></td></tr>'
+    +'</tbody></table></div>';
+
+  h+='<div class="dgrid">';
+
+  h+='<div class="block"><h4>性格・行動特性</h4><div class="bars">'
+    +["A","B","C","D","E","F"].map(function(k){
+      return bar(k+"　"+K.scales[k].name, sc[k].stage, sc[k].mean, sc[k].stage<=2?"lo":"");
+    }).join("")
+    +bar("L　回答態度", null, sc.L.mean, "l")
+    +'</div><p style="font-size:12.5px;color:var(--ink-2);margin:12px 0 0">'
+    +'L尺度：'+sc.L.mean.toFixed(2)+'（'+r.Ljudge+'）'
+    +(r.L>=4.2?'　<span style="color:var(--vermilion)">他尺度の数値は参考程度にとどめてください。</span>':'')
+    +'</p></div>';
+
+  h+='<div class="block"><h4>受検ログ</h4><div class="log">'
+    +r.log.map(function(l){ return '<div class="l'+(l.bad?" bad":"")+'"><b>'+esc(l.k)+'</b><span>'
+      +esc(l.v)+'</span></div>';}).join("")
+    +'<div class="l'+(r.checksum===false?" bad":"")+'"><b>データ整合性</b><span>'
+    +(r.checksum===true?"検証OK":r.checksum===false?"不一致（改変または破損の疑い）":"検証情報なし")
+    +'</span></div></div></div>';
+
+  h+='</div>';
+
+  h+='<div class="block" style="margin-top:26px"><h4>状況判断テスト（SJT）の内訳</h4><div class="sjt">'
+    +r.sjt.map(function(x){
+      var opt = x.v>=0 ? CH[x.v] : "無回答";
+      var txt = x.v>=0 ? K.q4[x.i].opts[x.v] : "―";
+      return '<div class="r'+(x.pt===0?" z":"")+'"><span class="p">第'+(x.i+1)+'問</span>'
+        +'<span class="p">'+x.pt+'点</span><span>'+esc(opt)+'　'+esc(txt)+'</span></div>';
+    }).join("")+'</div>'
+    +'<p style="font-size:12.5px;color:var(--ink-2);margin:10px 0 0">'
+    +'測定観点は 0点／1点の選択に注目してください：'
+    +r.sjt.filter(function(x){return x.pt<=1;}).map(function(x){
+        return '第'+(x.i+1)+'問（'+esc(K.q4[x.i].obs)+'）';}).join("、")
+    +(r.sjt.every(function(x){return x.pt>=2;})?"該当なし":"")+'</p></div>';
+
+  var wrongs=[];
+  [["第1部",r.c1,K.q1,"k1"],["第2部",r.c2,K.q2,"k2"],["第3部",r.c3,K.q3,"k3"]].forEach(function(x){
+    x[1].wrong.forEach(function(i){
+      var key=K[x[3]][i], given=r.p["a"+(x[3][1])][i];
+      wrongs.push('<div class="wrong"><div class="h">'+x[0]+' 問'+(i+1)
+        +'　選択 <b>'+(given>=0?CH[given]:"無回答")+'</b>　正解 '+CH[key]+'</div>'
+        +esc(x[2][i].q.replace(/<[^>]+>/g,""))+'<br><span style="color:var(--ink-3)">'
+        +x[2][i].exp.replace(/<[^>]+>/g,"")+'</span></div>');
+    });
+  });
+  h+='<div class="block" style="margin-top:26px"><h4>誤答（第1〜3部）'
+    +(wrongs.length?'　'+wrongs.length+'問':'　なし')+'</h4>'
+    +(wrongs.length?'<div class="wrongs">'+wrongs.join("")+'</div>'
+      :'<p style="font-size:13px;color:var(--ink-2);margin:0">全問正解です。</p>')+'</div>';
+
+  h+='<div class="block" style="margin-top:26px"><h4>重点確認事項</h4>'
+    +(r.flags.length?'<div class="flags">'+r.flags.map(function(f){
+       return '<div class="flag"><span class="n">'+("0"+f[0]).slice(-2)+'</span><span>'
+         +esc(f[1])+'</span></div>';}).join("")+'</div>'
+     :'<p style="font-size:13px;color:var(--ink-2);margin:0">該当なし。'
+      +'ただし検査結果は仮説であり、面接で過去の行動事実により検証してください。</p>')
+    +'</div>';
+
+  h+='</div></div>';
+  d.innerHTML=h;
+}
+function renderCsv(){
+  var head=["氏名","メールアドレス","受験番号","受検日時","所要(分)","再読込",
+            "言語","数的","論理","SJT","合計","段階",
+            "A","B","C","D","E","F","L平均","L判定","未回答(能力)","未回答(性格)","確認事項"];
+  var rows=[head];
+  results.forEach(function(r){
+    if(r.err) return;
+    var p=r.p, sc=r.scales;
+    var mins = (p.start&&p.end) ? Math.round((new Date(p.end)-new Date(p.start))/60000) : "";
+    rows.push([p.name||"",p.email||"",p.code||"",jdate(p.start),mins,(p.reloads||0),
+      r.s1,r.s2,r.s3,r.s4,r.total,r.grade,
+      sc.A.stage,sc.B.stage,sc.C.stage,sc.D.stage,sc.E.stage,sc.F.stage,
+      sc.L.mean.toFixed(2),r.Ljudge,r.missAbility,r.miss5,
+      r.flags.map(function(f){return ("0"+f[0]).slice(-2);}).join(" ")]);
+  });
+  el("csv").value = rows.map(function(row){
+    return row.map(function(c){ c=String(c);
+      return /[",\n]/.test(c) ? '"'+c.replace(/"/g,'""')+'"' : c; }).join(",");
+  }).join("\n");
+}
+
+/* ---------- 入出力 ---------- */
+function readFiles(files){
+  Array.prototype.forEach.call(files, function(f){
+    var fr=new FileReader();
+    fr.onload=function(){ addResults(parseAll(String(fr.result))); };
+    fr.onerror=function(){ results.push({err:f.name+" を読み込めませんでした"}); paint(); };
+    fr.readAsText(f,"utf-8");
+  });
+}
+el("pick").addEventListener("click",function(){ el("file").click(); });
+el("file").addEventListener("change",function(e){ readFiles(e.target.files); e.target.value=""; });
+var dz=el("drop");
+["dragenter","dragover"].forEach(function(ev){ dz.addEventListener(ev,function(e){
+  e.preventDefault(); dz.classList.add("over"); }); });
+["dragleave","drop"].forEach(function(ev){ dz.addEventListener(ev,function(e){
+  e.preventDefault(); dz.classList.remove("over"); }); });
+dz.addEventListener("drop",function(e){ if(e.dataTransfer&&e.dataTransfer.files) readFiles(e.dataTransfer.files); });
+el("loadpaste").addEventListener("click",function(){
+  var t=el("paste").value; if(!t.trim()) return;
+  addResults(parseAll(t)); el("paste").value="";
+});
+el("clearall").addEventListener("click",function(){
+  if(results.length && !confirm("読み込んだ結果をすべて消去します。よろしいですか？")) return;
+  results=[]; selected=-1; paint();
+});
+el("copycsv").addEventListener("click",function(){
+  var b=el("copycsv"), t=el("csv").value;
+  function done(ok){ b.textContent=ok?"コピーしました":"コピーできませんでした";
+    setTimeout(function(){ b.textContent="CSVをコピー"; },2200); }
+  if(navigator.clipboard&&navigator.clipboard.writeText)
+    navigator.clipboard.writeText(t).then(function(){done(true);},function(){done(false);});
+  else { el("csv").select(); var ok=false; try{ok=document.execCommand("copy");}catch(e){} done(ok); }
+});
+el("savecsv").addEventListener("click",function(){
+  var name="適性検査_採点結果_"+new Date().toISOString().slice(0,10)+".csv";
+  var text="﻿"+el("csv").value;
+  if(window.claude&&window.claude.use){
+    window.claude.use("downloads").then(function(dl){
+      if(!dl) return blobSave(name,text);
+      dl.save({filename:name,data:text}).catch(function(){});
+    }).catch(function(){ blobSave(name,text); });
+  } else blobSave(name,text);
+});
+function blobSave(name,text){
+  try{
+    var blob=new Blob([text],{type:"text/csv;charset=utf-8"});
+    var url=URL.createObjectURL(blob), a=document.createElement("a");
+    a.href=url; a.download=name; a.style.display="none";
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); },1500);
+  }catch(e){ alert("保存できませんでした。「CSVをコピー」をご利用ください。"); }
+}
+</script>
+
+</body>
+</html>

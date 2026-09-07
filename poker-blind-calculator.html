@@ -93,6 +93,30 @@ ul.tips li{margin:3px 0}
 .clock .next{font-size:12px;color:var(--muted);margin-top:10px;letter-spacing:.06em}
 .clock.break .time{color:var(--blue)}
 .clock .ctrl{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.clock .fsinfo{display:none}
+.clock .hint{font-size:11px;color:#555350;margin-top:10px;letter-spacing:.06em}
+
+/* --- 全画面モード（ネイティブ / 擬似 共通） --- */
+.clock.fs{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  border:none;border-radius:0;padding:3vh 4vw;background:#000;
+}
+.clock.fs.pseudo{position:fixed;inset:0;z-index:9999;width:100vw;height:100vh}
+.clock.fs .lv{font-size:min(3vh,2.8vw);letter-spacing:.4em}
+.clock.fs .time{font-size:min(34vh,25vw);margin:1vh 0 .5vh}
+.clock.fs .blinds{font-size:min(12vh,10vw)}
+.clock.fs .ante{font-size:min(4vh,3.4vw);min-height:auto;letter-spacing:.2em}
+.clock.fs .next{font-size:min(3vh,2.8vw);margin-top:2.5vh}
+.clock.fs .fsinfo{display:block;font-size:min(2.3vh,2.2vw);color:var(--muted);margin-top:1.4vh;letter-spacing:.08em}
+.clock.fs .hint{display:none}
+.clock.fs .ctrl{margin-top:3.5vh;transition:opacity .35s}
+.clock.fs .ctrl button{font-size:min(2.4vh,2.1vw);padding:.7em 1.4em}
+.clock.fs.idle .ctrl{opacity:0;pointer-events:none}
+.clock.fs.idle{cursor:none}
+@media (orientation:portrait){
+  .clock.fs .time{font-size:min(22vh,30vw)}
+  .clock.fs .blinds{font-size:min(9vh,12vw)}
+}
 
 .footer{text-align:center;color:var(--muted);font-size:12px;margin-top:34px;letter-spacing:.06em}
 .hidden{display:none!important}
@@ -227,13 +251,16 @@ ul.tips li{margin:3px 0}
         <div class="blinds" id="clkBlinds">50 / 100</div>
         <div class="ante" id="clkAnte"></div>
         <div class="next" id="clkNext"></div>
+        <div class="fsinfo" id="clkInfo"></div>
         <div class="ctrl">
           <button id="btnStart" class="primary">スタート</button>
           <button id="btnPrev" class="sm">◀ 前</button>
           <button id="btnNext" class="sm">次 ▶</button>
           <button id="btnResetClk" class="sm">リセット</button>
           <button id="btnSound" class="sm">🔔 音 ON</button>
+          <button id="btnFs" class="sm">⛶ 全画面</button>
         </div>
+        <div class="hint">全画面：ボタン / クロックをダブルクリック / <b>F</b> キー &nbsp;・&nbsp; <b>Space</b> で開始・一時停止</div>
       </div>
     </div>
   </div>
@@ -634,6 +661,13 @@ function clkRender(){
   $('clkNext').textContent = nx
     ? (nx.type === 'break' ? '次：休憩 ' + nx.minutes + '分' : '次：Lv' + nx.ref.no + '  ' + fmt(nx.ref.sb) + ' / ' + fmt(nx.ref.bb) + (nx.ref.ante ? ' (ante ' + fmt(nx.ref.ante) + ')' : ''))
     : '最終レベルです';
+  // 全画面時に表示する進行状況
+  const done = s.startAt + (s.minutes * 60 - clk.left) / 60;
+  const info = ['経過 ' + hhmm(Math.max(0, Math.round(done))) + ' / ' + hhmm(RESULT.totalMinutes)];
+  if (s.type === 'level') info.push('平均スタック 約' + s.ref.avgBB.toFixed(0) + 'BB（推定残り ' + s.ref.left + '人）');
+  if (RESULT.cfg.startTime) info.push('終了予定 ' + wallClock(RESULT.cfg.startTime, RESULT.totalMinutes));
+  $('clkInfo').textContent = info.join('　|　');
+
   document.querySelectorAll('#structBody tr').forEach(tr => tr.classList.remove('now'));
   if (s.type === 'level'){
     const tr = document.querySelector('#structBody tr[data-lv="' + s.ref.no + '"]');
@@ -690,6 +724,71 @@ $('btnSound').addEventListener('click', () => {
   $('btnSound').textContent = clk.sound ? '🔔 音 ON' : '🔕 音 OFF';
 });
 setInterval(tick, 1000);
+
+/* ================= 全画面表示 ================= */
+const clockEl = $('clock');
+let pseudoFs = false, ctrlTimer = null, wakeLock = null;
+
+function isFs(){
+  return !!(document.fullscreenElement || document.webkitFullscreenElement) || pseudoFs;
+}
+async function keepAwake(on){
+  try {
+    if (on && !wakeLock && navigator.wakeLock) wakeLock = await navigator.wakeLock.request('screen');
+    else if (!on && wakeLock){ await wakeLock.release(); wakeLock = null; }
+  } catch (e) { wakeLock = null; }   // 非対応でも動作に影響なし
+}
+function showCtrl(){
+  clockEl.classList.remove('idle');
+  clearTimeout(ctrlTimer);
+  if (isFs()) ctrlTimer = setTimeout(() => { if (isFs()) clockEl.classList.add('idle'); }, 3000);
+}
+function syncFs(){
+  const on = isFs();
+  clockEl.classList.toggle('fs', on);
+  clockEl.classList.toggle('pseudo', pseudoFs);
+  document.body.style.overflow = pseudoFs ? 'hidden' : '';
+  $('btnFs').textContent = on ? '⛶ 全画面を終了' : '⛶ 全画面';
+  keepAwake(on);
+  showCtrl();
+  clkRender();
+}
+async function enterFs(){
+  const req = clockEl.requestFullscreen || clockEl.webkitRequestFullscreen;
+  if (req){
+    try { await req.call(clockEl); syncFs(); return; } catch (e) {}
+  }
+  pseudoFs = true; syncFs();   // ネイティブ全画面が使えない環境向けのフォールバック
+}
+async function exitFs(){
+  const el = document.fullscreenElement || document.webkitFullscreenElement;
+  if (el){
+    const ex = document.exitFullscreen || document.webkitExitFullscreen;
+    try { await ex.call(document); } catch (e) {}
+  }
+  pseudoFs = false; syncFs();
+}
+function toggleFs(){ isFs() ? exitFs() : enterFs(); }
+
+$('btnFs').addEventListener('click', toggleFs);
+clockEl.addEventListener('dblclick', e => { if (e.target.tagName !== 'BUTTON') toggleFs(); });
+['fullscreenchange', 'webkitfullscreenchange'].forEach(ev =>
+  document.addEventListener(ev, () => { if (!document.fullscreenElement && !document.webkitFullscreenElement) pseudoFs = false; syncFs(); }));
+['mousemove', 'touchstart', 'keydown'].forEach(ev => clockEl.addEventListener(ev, showCtrl));
+
+document.addEventListener('keydown', e => {
+  const t = e.target.tagName;
+  if (t === 'INPUT' || t === 'SELECT' || t === 'TEXTAREA') return;
+  if (e.key === 'f' || e.key === 'F'){ e.preventDefault(); toggleFs(); }
+  else if (e.key === 'Escape' && pseudoFs){ e.preventDefault(); exitFs(); }
+  else if (e.code === 'Space'){ e.preventDefault(); $('btnStart').click(); }
+  else if (e.key === 'ArrowRight' && isFs()){ e.preventDefault(); $('btnNext').click(); }
+  else if (e.key === 'ArrowLeft'  && isFs()){ e.preventDefault(); $('btnPrev').click(); }
+  showCtrl();
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && isFs()) keepAwake(true);
+});
 
 /* ================= 保存・書き出し ================= */
 function download(name, blob){

@@ -1,0 +1,4 @@
+build/*.wav
+build/preview/
+build/check_*.png
+__pycache__/

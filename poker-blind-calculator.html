@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bar "IYOIIYO" ポーカートーナメント ブラインド計算機</title>
+<style>
+:root{
+  --bg:#0d0d0f; --panel:#16161a; --panel2:#1d1d22; --line:#2e2e36;
+  --ink:#f4f1ea; --muted:#98968e; --gold:#c8a44a; --red:#c8322f;
+  --green:#2f9e5f; --blue:#3d7fd6;
+  --serif: Georgia, "Times New Roman", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--sans);
+  font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 18px 80px}
+
+/* ---------- header / logo ---------- */
+.hero{display:flex;flex-direction:column;align-items:center;gap:18px;padding:14px 0 26px}
+.logo-box{width:100%;max-width:520px}
+.logo-box svg{width:100%;height:auto;display:block;filter:drop-shadow(0 10px 30px rgba(0,0,0,.6))}
+.hero h1{font-family:var(--serif);font-size:26px;letter-spacing:.06em;margin:0;text-align:center;font-weight:700}
+.hero p{margin:0;color:var(--muted);font-size:13px;letter-spacing:.08em;text-align:center}
+
+/* ---------- layout ---------- */
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:20px;align-items:start}
+@media (max-width:960px){.grid{grid-template-columns:1fr}}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 18px 20px;margin-bottom:20px}
+.card > h2{
+  font-family:var(--serif);font-size:17px;margin:0 0 14px;letter-spacing:.08em;
+  display:flex;align-items:center;gap:10px;font-weight:700;
+}
+.card > h2::before{content:"";width:10px;height:10px;background:var(--gold);transform:rotate(45deg);flex:0 0 auto}
+h3{font-size:13px;letter-spacing:.1em;color:var(--muted);margin:20px 0 8px;font-weight:600;text-transform:uppercase}
+
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;letter-spacing:.04em}
+input,select,button{font-family:inherit;font-size:14px}
+input[type=number],input[type=text],input[type=time],select{
+  width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+  border-radius:8px;padding:8px 10px;outline:none;
+}
+input[type=number]:focus,select:focus,input[type=time]:focus{border-color:var(--gold)}
+input[type=color]{width:34px;height:30px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;cursor:pointer}
+.row{display:grid;gap:12px}
+.row.c2{grid-template-columns:1fr 1fr}
+.row.c3{grid-template-columns:1fr 1fr 1fr}
+@media (max-width:520px){.row.c2,.row.c3{grid-template-columns:1fr}}
+
+button{
+  background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+  border-radius:8px;padding:8px 14px;cursor:pointer;transition:.15s;letter-spacing:.04em;
+}
+button:hover{border-color:var(--gold);color:var(--gold)}
+button.primary{background:var(--gold);border-color:var(--gold);color:#14140f;font-weight:700}
+button.primary:hover{background:#dcb75c;color:#14140f}
+button.sm{padding:4px 9px;font-size:12px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--line);font-size:13px}
+th{color:var(--muted);font-weight:600;font-size:11px;letter-spacing:.08em;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tbody tr:hover{background:rgba(200,164,74,.06)}
+tr.brk td{background:rgba(61,127,214,.10);color:var(--blue);font-style:italic;text-align:center}
+tr.brk td:first-child{text-align:center}
+tr.now{background:rgba(200,164,74,.16)!important;box-shadow:inset 3px 0 0 var(--gold)}
+.chip-dot{display:inline-block;width:13px;height:13px;border-radius:50%;border:1.5px solid rgba(255,255,255,.35);vertical-align:-2px;margin-right:6px}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.stat .k{font-size:11px;color:var(--muted);letter-spacing:.06em}
+.stat .v{font-family:var(--serif);font-size:21px;font-weight:700;line-height:1.25;font-variant-numeric:tabular-nums}
+.stat .v small{font-size:12px;color:var(--muted);font-family:var(--sans);font-weight:400}
+
+.note{font-size:12.5px;color:var(--muted);line-height:1.7}
+.warn{border-left:3px solid var(--gold);background:rgba(200,164,74,.08);padding:9px 12px;border-radius:0 8px 8px 0;font-size:13px;margin:10px 0}
+.warn.bad{border-color:var(--red);background:rgba(200,50,47,.09)}
+ul.tips{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:var(--muted)}
+ul.tips li{margin:3px 0}
+
+/* ---------- clock ---------- */
+.clock{background:#000;border:1px solid var(--line);border-radius:14px;padding:22px 18px;text-align:center}
+.clock .lv{font-size:12px;letter-spacing:.28em;color:var(--gold);text-transform:uppercase}
+.clock .time{font-family:var(--serif);font-size:clamp(52px,13vw,92px);line-height:1;font-weight:700;font-variant-numeric:tabular-nums;margin:6px 0 4px}
+.clock .blinds{font-family:var(--serif);font-size:clamp(24px,6vw,38px);font-weight:700;letter-spacing:.02em}
+.clock .ante{font-size:13px;color:var(--muted);letter-spacing:.1em;min-height:20px}
+.clock .next{font-size:12px;color:var(--muted);margin-top:10px;letter-spacing:.06em}
+.clock.break .time{color:var(--blue)}
+.clock .ctrl{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+
+.footer{text-align:center;color:var(--muted);font-size:12px;margin-top:34px;letter-spacing:.06em}
+.hidden{display:none!important}
+
+/* ---------- print ---------- */
+@media print{
+  body{background:#fff;color:#000}
+  .wrap{max-width:none;padding:0}
+  .card{background:#fff;border:1px solid #bbb;break-inside:avoid;margin-bottom:12px}
+  th,td{border-bottom:1px solid #ccc;color:#000}
+  th{color:#444}
+  .stat{background:#f5f5f5;border-color:#ccc}
+  .stat .k,.note,.footer,.clock .next{color:#444}
+  .no-print,.clock,.btnrow{display:none!important}
+  .hero{padding:0 0 10px}
+  .logo-box{max-width:300px}
+  tr.now{background:none!important;box-shadow:none!important}
+  tr.brk td{background:#eee;color:#333}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ================= LOGO (vector re-master / 高画質ベクター版) ================= -->
+<div class="hero">
+  <div class="logo-box">
+    <svg id="logo" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label='Bar IYOIIYO - Karaoke &amp; Darts'>
+      <rect x="0" y="0" width="800" height="400" rx="28" fill="#0b0b0c"/>
+      <rect x="15" y="15" width="770" height="370" rx="18" fill="none" stroke="#f4f1ea" stroke-width="7"/>
+      <rect x="31" y="31" width="738" height="338" rx="9" fill="none" stroke="#f4f1ea" stroke-width="2"/>
+
+      <text x="400" y="90" text-anchor="middle" fill="#f4f1ea" font-family="Georgia, 'Times New Roman', serif"
+            font-style="italic" font-size="25" letter-spacing="5">Est. 2026</text>
+
+      <g stroke="#f4f1ea" stroke-width="3.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="292" y1="120" x2="508" y2="120"/>
+        <path d="M508 120 L484 107 M508 120 L484 133"/>
+        <path d="M300 120 L286 109 M300 120 L286 131 M316 120 L302 109 M316 120 L302 131"/>
+      </g>
+
+      <text x="400" y="219" text-anchor="middle" fill="#f4f1ea" font-family="Georgia, 'Times New Roman', serif"
+            font-size="72" font-weight="700" letter-spacing="1">Bar &#8220;IYOIIYO&#8221;</text>
+
+      <rect x="58" y="252" width="684" height="48" fill="#f4f1ea"/>
+      <text x="395" y="284" text-anchor="middle" fill="#0b0b0c" font-family="Georgia, 'Times New Roman', serif"
+            font-size="27" font-weight="700" letter-spacing="10">KARAOKE &amp; DARTS</text>
+
+      <text x="400" y="348" text-anchor="middle" fill="#f4f1ea" font-family="Georgia, 'Times New Roman', serif"
+            font-style="italic" font-size="28" letter-spacing="1">Your Crew&#8217;s Hangout</text>
+    </svg>
+  </div>
+  <div>
+    <h1>POKER TOURNAMENT &nbsp;BLIND CALCULATOR</h1>
+    <p>手持ちのチップ・人数・想定時間から、自動で最適なブラインド構成をつくります</p>
+  </div>
+  <div class="btnrow no-print" style="margin-top:0">
+    <button class="sm" id="btnLogoPng">ロゴを高解像度PNGで保存 (4000px)</button>
+    <button class="sm" id="btnLogoSvg">ロゴをSVGで保存（無限解像度）</button>
+  </div>
+</div>
+
+<div class="grid">
+  <!-- ================= 入力 ================= -->
+  <div>
+    <div class="card no-print">
+      <h2>1. 手元のチップ</h2>
+      <table id="chipTable">
+        <thead>
+          <tr><th>色</th><th>額面</th><th>総枚数</th><th>1人あたり</th><th>小計</th><th></th></tr>
+        </thead>
+        <tbody id="chipBody"></tbody>
+      </table>
+      <div class="btnrow">
+        <button class="sm" id="btnAddChip">＋ 種類を追加</button>
+        <button class="sm" id="btnAutoAlloc">1人あたりを自動配分</button>
+        <button class="sm" id="btnPreset">標準セットに戻す</button>
+      </div>
+      <div class="note" style="margin-top:10px">
+        「1人あたり」は自動計算されますが、直接書き換えることもできます。<br>
+        大きい額面はあえて配らず、途中のカラーアップ（両替）用に温存します。
+      </div>
+      <div id="chipWarn"></div>
+    </div>
+
+    <div class="card no-print">
+      <h2>2. トーナメント条件</h2>
+      <div class="row c2">
+        <div><label>参加人数</label><input type="number" id="players" min="2" max="500" step="1" value="9"></div>
+        <div><label>想定の所要時間（分）</label><input type="number" id="duration" min="30" max="1200" step="5" value="240"></div>
+      </div>
+      <div class="row c2" style="margin-top:12px">
+        <div>
+          <label>1レベルの長さ</label>
+          <select id="levelMode">
+            <option value="auto">自動（おすすめ）</option>
+            <option value="10">10分</option><option value="12">12分</option>
+            <option value="15">15分</option><option value="20">20分</option>
+            <option value="25">25分</option><option value="30">30分</option>
+            <option value="40">40分</option>
+          </select>
+        </div>
+        <div>
+          <label>アンテ</label>
+          <select id="anteMode">
+            <option value="bb">BBアンテ（現代式・おすすめ）</option>
+            <option value="classic">全員アンテ（クラシック）</option>
+            <option value="none">アンテなし</option>
+          </select>
+        </div>
+      </div>
+      <div class="row c3" style="margin-top:12px">
+        <div><label>休憩の間隔（レベル毎）</label><input type="number" id="breakEvery" min="0" max="12" step="1" value="4"></div>
+        <div><label>休憩の長さ（分）</label><input type="number" id="breakMinutes" min="0" max="60" step="1" value="10"></div>
+        <div><label>開始時刻（任意）</label><input type="time" id="startTime" value=""></div>
+      </div>
+      <div class="row c2" style="margin-top:12px">
+        <div><label>開始スタック（BB数の目安）</label><input type="number" id="targetBB" min="20" max="300" step="5" value="75"></div>
+        <div><label>終了時の目安（総チップ÷最終BB）</label><input type="number" id="endFactor" min="6" max="40" step="1" value="15"></div>
+      </div>
+      <div class="btnrow">
+        <button class="primary" id="btnCalc">ブラインド表を作成</button>
+        <button class="sm" id="btnReset">設定をリセット</button>
+      </div>
+    </div>
+
+    <div class="card no-print" id="clockCard">
+      <h2>4. トーナメントクロック</h2>
+      <div class="clock" id="clock">
+        <div class="lv" id="clkLabel">LEVEL 1</div>
+        <div class="time" id="clkTime">20:00</div>
+        <div class="blinds" id="clkBlinds">50 / 100</div>
+        <div class="ante" id="clkAnte"></div>
+        <div class="next" id="clkNext"></div>
+        <div class="ctrl">
+          <button id="btnStart" class="primary">スタート</button>
+          <button id="btnPrev" class="sm">◀ 前</button>
+          <button id="btnNext" class="sm">次 ▶</button>
+          <button id="btnResetClk" class="sm">リセット</button>
+          <button id="btnSound" class="sm">🔔 音 ON</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 結果 ================= -->
+  <div>
+    <div class="card">
+      <h2>3. 結果サマリー</h2>
+      <div class="stats" id="summary"></div>
+      <div id="diag"></div>
+      <h3>スターティングスタック（1人分）</h3>
+      <table><tbody id="stackBody"></tbody></table>
+      <h3>カラーアップ（両替）の目安</h3>
+      <div class="note" id="colorup"></div>
+    </div>
+
+    <div class="card">
+      <h2>ブラインド・ストラクチャー</h2>
+      <table>
+        <thead>
+          <tr><th>Lv</th><th>SB</th><th>BB</th><th>アンテ</th><th>時間</th><th>経過</th><th>平均<br>スタック</th></tr>
+        </thead>
+        <tbody id="structBody"></tbody>
+      </table>
+      <div class="btnrow no-print">
+        <button class="sm" id="btnCsv">CSVで保存</button>
+        <button class="sm" id="btnPrint">印刷 / PDF</button>
+      </div>
+      <div class="note" style="margin-top:10px">
+        「平均スタック」は、その時点で残っていると推定される人数から計算したBB数の目安です。<br>
+        10BBを下回るあたりが、実際に決着がつきやすいゾーンです。
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">Bar &ldquo;IYOIIYO&rdquo; &nbsp;/&nbsp; KARAOKE &amp; DARTS &nbsp;&mdash;&nbsp; オフラインで動作します</div>
+</div>
+
+<script>
+"use strict";
+
+/* =========================================================
+   Bar "IYOIIYO" — Poker Tournament Blind Calculator
+   単一HTMLで完結。外部リソースなし＝ローカルで動作。
+   ========================================================= */
+
+const $  = (id) => document.getElementById(id);
+const fmt = (n) => Math.round(n).toLocaleString('en-US');
+
+const PRESET_CHIPS = [
+  { d: 25,   n: 100, c: '#e8e6e1', per: null },
+  { d: 100,  n: 100, c: '#c8322f', per: null },
+  { d: 500,  n: 60,  c: '#3d7fd6', per: null },
+  { d: 1000, n: 40,  c: '#2f9e5f', per: null },
+  { d: 5000, n: 20,  c: '#1a1a1a', per: null }
+];
+
+let chips = JSON.parse(JSON.stringify(PRESET_CHIPS));
+let RESULT = null;
+
+/* ---------------- 数値を「きれいな値」に丸める ---------------- */
+function mantissaRank(v){
+  if (v <= 0) return 9;
+  const e = Math.floor(Math.log10(v));
+  const m = v / Math.pow(10, e);
+  const tbl = [[1,0],[2,0],[5,0],[1.5,1],[2.5,1],[3,1],[4,1],[6,2],[7.5,2],[8,2],
+               [1.2,3],[1.6,3],[3.5,3],[4.5,3],[7,3],[9,3]];
+  let best = 4;
+  for (const [t, r] of tbl) if (Math.abs(m - t) < 1e-6) best = Math.min(best, r);
+  return best;
+}
+/** target に近く、step の倍数で、min 以上の「きれいな」値 */
+function niceMultiple(target, step, min){
+  min = min || step;
+  const base = Math.max(1, Math.round(target / step));
+  let best = null, bestScore = Infinity;
+  for (let k = -3; k <= 4; k++){
+    const c = (base + k) * step;
+    if (c < step || c < min) continue;
+    const s = Math.abs(Math.log(c / target)) + mantissaRank(c) * 0.040;
+    if (s < bestScore){ bestScore = s; best = c; }
+  }
+  return best !== null ? best : Math.max(min, step);
+}
+
+/* ---------------- スターティングスタックの自動配分 ----------------
+   ルール
+   1. 額面の小さい順に配る
+   2. ある額面は「それより小さい額面の合計」の2倍を超えたら配らない
+      （＝お釣りが作れない大きすぎるチップは配らず、両替用に温存）
+   3. 最後に最小額面の枚数を微調整して、合計をキリのいい数字にする
+------------------------------------------------------------------ */
+function autoAllocate(list, players){
+  const sorted = list.filter(c => c.d > 0 && c.n > 0).sort((a,b) => a.d - b.d);
+  const per = new Map();
+  let total = 0;
+  sorted.forEach((c, i) => {
+    const avail = Math.floor(c.n / players);
+    if (avail <= 0){ per.set(c.d, 0); return; }
+    if (i > 0 && c.d > total * 0.6){ per.set(c.d, 0); return; }  // 大きすぎる → 両替用に温存
+    const cap = (i === 0) ? 14 : 8;
+    // 下位額面の合計の 2.5 倍を超える量は配らない（お釣りが作れる構成を保つ）
+    const balance = (i === 0) ? cap : Math.max(1, Math.floor(total * 2.5 / c.d));
+    const give = Math.min(avail, cap, balance);
+    per.set(c.d, give);
+    total += give * c.d;
+  });
+
+  // 合計をキリのいい数字へ（最小額面の枚数だけ動かす）
+  const s0 = sorted.find(c => (per.get(c.d) || 0) > 0);
+  if (s0){
+    const avail0 = Math.floor(s0.n / players);
+    const rest = total - per.get(s0.d) * s0.d;
+    let bestN = per.get(s0.d), bestScore = Infinity;
+    for (let n = Math.max(2, Math.min(avail0, 4)); n <= Math.min(avail0, 16); n++){
+      const t = rest + n * s0.d;
+      let round = 0;
+      [10000, 5000, 2500, 1000, 500, 250, 100].forEach((m, idx) => {
+        if (t % m === 0) round = Math.max(round, 7 - idx);
+      });
+      const score = -round * 1.0 + Math.abs(n - per.get(s0.d)) * 0.35;
+      if (score < bestScore){ bestScore = score; bestN = n; }
+    }
+    total = rest + bestN * s0.d;
+    per.set(s0.d, bestN);
+  }
+  list.forEach(c => { c.per = per.has(c.d) ? per.get(c.d) : 0; });
+  return total;
+}
+
+/* ---------------- レベル数の計算 ---------------- */
+function levelsThatFit(duration, levelMin, breakEvery, breakMin){
+  let n = 1;
+  while (n < 400){
+    const breaks = breakEvery > 0 ? Math.floor((n - 1) / breakEvery) : 0;
+    if (n * levelMin + breaks * breakMin > duration) return Math.max(3, n - 1);
+    n++;
+  }
+  return 60;
+}
+
+/* ---------------- 本体：ストラクチャー生成 ---------------- */
+function buildStructure(cfg){
+  const inPlay = chips.filter(c => c.d > 0 && (c.per || 0) > 0).map(c => c.d).sort((a,b) => a - b);
+  const allD   = chips.filter(c => c.d > 0 && c.n > 0).map(c => c.d).sort((a,b) => a - b);
+  const units  = (inPlay.length ? inPlay : allD).slice();
+  // 配っていない大きい額面もカラーアップ先として使えるように追加
+  allD.forEach(d => { if (!units.includes(d) && d > units[units.length - 1]) units.push(d); });
+  units.sort((a,b) => a - b);
+
+  const stack      = cfg.stack;
+  const totalChips = stack * cfg.players;
+  const u0         = units[0];
+
+  const startBB = niceMultiple(stack / cfg.targetBB, 2 * u0, 2 * u0);
+  const finalBB = Math.max(startBB * 6, totalChips / cfg.endFactor);
+
+  // 1レベルの長さを自動決定（ブラインドの上昇率が 1.40 前後になるように）
+  let levelMin = cfg.levelMin, N;
+  if (cfg.levelMode === 'auto'){
+    const cands = [6, 8, 10, 12, 15, 20, 25, 30, 40];
+    let best = null, bestScore = Infinity;
+    for (const L of cands){
+      const n = levelsThatFit(cfg.duration, L, cfg.breakEvery, cfg.breakMinutes);
+      if (n < 4) continue;
+      const r = Math.pow(finalBB / startBB, 1 / Math.max(1, n - 1));
+      const score = Math.abs(Math.log(r / 1.40)) + (n < 8 ? (8 - n) * 0.05 : 0) + (n > 24 ? (n - 24) * 0.02 : 0);
+      if (score < bestScore){ bestScore = score; best = L; }
+    }
+    levelMin = best || 20;
+  }
+  N = levelsThatFit(cfg.duration, levelMin, cfg.breakEvery, cfg.breakMinutes);
+
+  const ratio = Math.pow(finalBB / startBB, 1 / Math.max(1, N - 1));
+
+  const anteFrom = cfg.anteMode === 'none' ? Infinity : Math.max(2, Math.round(N * 0.25));
+
+  const levels = [];
+  let unitIdx = 0, prevBB = 0;
+  for (let k = 0; k < N; k++){
+    const target = startBB * Math.pow(ratio, k);
+    while (unitIdx + 1 < units.length && units[unitIdx + 1] <= target / 8) unitIdx++;
+    const u  = units[unitIdx];
+    let bb   = niceMultiple(target, 2 * u, prevBB + 2 * u);
+    if (bb <= prevBB) bb = prevBB + 2 * u;
+    prevBB   = bb;
+
+    let ante = 0;
+    if (k + 1 >= anteFrom){
+      if (cfg.anteMode === 'bb') ante = bb;
+      else { const a = niceMultiple(bb * 0.22, u, u); ante = (a >= u && a < bb) ? a : 0; }
+    }
+    levels.push({ no: k + 1, sb: bb / 2, bb, ante, unit: u, minutes: levelMin });
+  }
+
+  // スケジュール（休憩込み）
+  const sched = [];
+  let elapsed = 0;
+  levels.forEach((L, i) => {
+    L.startAt = elapsed;
+    elapsed  += L.minutes;
+    L.endAt   = elapsed;
+    sched.push({ type: 'level', ref: L, minutes: L.minutes });
+    const isLast = (i === levels.length - 1);
+    if (!isLast && cfg.breakEvery > 0 && cfg.breakMinutes > 0 && (i + 1) % cfg.breakEvery === 0){
+      sched.push({ type: 'break', minutes: cfg.breakMinutes, after: L.no, startAt: elapsed });
+      elapsed += cfg.breakMinutes;
+    }
+  });
+  // 休憩を挟んだ分の経過時間を再計算
+  let t = 0;
+  sched.forEach(s => { s.startAt = t; t += s.minutes; s.endAt = t; if (s.type === 'level'){ s.ref.startAt = s.startAt; s.ref.endAt = s.endAt; } });
+
+  // 残り人数の推定 → 各レベル開始時点の平均スタック(BB)
+  const span = t || 1;
+  levels.forEach(L => {
+    const p = L.startAt / span;
+    const left = Math.min(cfg.players, Math.max(2, Math.round(Math.pow(cfg.players, 1 - Math.pow(p, 1.15)))));
+    L.left  = left;
+    L.avgBB = totalChips / left / L.bb;
+  });
+  // 推定値が途中で増えないようにならす
+  for (let i = 1; i < levels.length; i++)
+    levels[i].avgBB = Math.min(levels[i].avgBB, levels[i - 1].avgBB);
+
+  // カラーアップ計画
+  const colorup = [];
+  units.forEach(d => {
+    const first = levels.find(L => L.unit > d);
+    const given = (chips.find(c => c.d === d) || {}).per || 0;
+    if (first && given > 0) colorup.push({ d, atLevel: first.no });
+  });
+
+  return {
+    levels, sched, colorup, units,
+    levelMin, N, ratio, startBB, finalBB: levels[levels.length - 1].bb,
+    totalChips, stack, players: cfg.players,
+    totalMinutes: t, startBBcount: stack / startBB, cfg
+  };
+}
+
+/* ================= 入力UI ================= */
+function renderChips(){
+  const players = Math.max(2, +$('players').value || 2);
+  const tb = $('chipBody');
+  tb.innerHTML = '';
+  chips.forEach((c, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td><input type="color" data-i="' + i + '" data-k="c" value="' + c.c + '"></td>' +
+      '<td><input type="number" data-i="' + i + '" data-k="d" min="1" step="1" value="' + c.d + '"></td>' +
+      '<td><input type="number" data-i="' + i + '" data-k="n" min="0" step="1" value="' + c.n + '"></td>' +
+      '<td><input type="number" data-i="' + i + '" data-k="per" min="0" step="1" value="' + (c.per || 0) + '"></td>' +
+      '<td>' + fmt((c.per || 0) * c.d) + '</td>' +
+      '<td style="text-align:center"><button class="sm" data-del="' + i + '">×</button></td>';
+    tb.appendChild(tr);
+  });
+  tb.querySelectorAll('input').forEach(el => {
+    el.addEventListener('input', () => {
+      const i = +el.dataset.i, k = el.dataset.k;
+      chips[i][k] = (k === 'c') ? el.value : Math.max(0, +el.value || 0);
+      // 再描画せずに小計と警告だけ更新（入力中にフォーカスが外れないように）
+      el.closest('tr').cells[4].textContent = fmt((chips[i].per || 0) * chips[i].d);
+      chipWarnings(players);
+      save();
+    });
+    el.addEventListener('change', () => calc());
+  });
+  tb.querySelectorAll('button[data-del]').forEach(el => {
+    el.addEventListener('click', () => { chips.splice(+el.dataset.del, 1); renderChips(); save(); });
+  });
+
+  chipWarnings(players);
+}
+
+function chipWarnings(players){
+  const w = [];
+  chips.forEach(c => {
+    if (c.d > 0 && c.n > 0 && Math.floor(c.n / players) < 1)
+      w.push('額面 ' + fmt(c.d) + ' は枚数が足りず、1人1枚も配れません。');
+    if ((c.per || 0) * players > c.n)
+      w.push('額面 ' + fmt(c.d) + ' は 必要 ' + fmt((c.per || 0) * players) + ' 枚 に対して手持ち ' + fmt(c.n) + ' 枚です。');
+  });
+  $('chipWarn').innerHTML = w.length ? '<div class="warn bad">' + w.join('<br>') + '</div>' : '';
+}
+
+function readCfg(){
+  const lm = $('levelMode').value;
+  return {
+    players:      Math.max(2, +$('players').value || 2),
+    duration:     Math.max(30, +$('duration').value || 240),
+    levelMode:    lm === 'auto' ? 'auto' : 'fixed',
+    levelMin:     lm === 'auto' ? 20 : +lm,
+    breakEvery:   Math.max(0, +$('breakEvery').value || 0),
+    breakMinutes: Math.max(0, +$('breakMinutes').value || 0),
+    anteMode:     $('anteMode').value,
+    targetBB:     Math.max(20, +$('targetBB').value || 75),
+    endFactor:    Math.max(6, +$('endFactor').value || 15),
+    startTime:    $('startTime').value,
+    stack:        chips.reduce((s, c) => s + (c.per || 0) * c.d, 0)
+  };
+}
+
+/* ================= 結果の描画 ================= */
+function wallClock(startTime, minutes){
+  if (!startTime) return '';
+  const [h, m] = startTime.split(':').map(Number);
+  const d = new Date(2000, 0, 1, h, m + Math.round(minutes));
+  return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+function hhmm(min){
+  const h = Math.floor(min / 60), m = Math.round(min % 60);
+  return (h ? h + '時間' : '') + m + '分';
+}
+
+function render(R){
+  const cfg = R.cfg;
+
+  /* サマリー */
+  $('summary').innerHTML = [
+    ['開始スタック', fmt(R.stack), ''],
+    ['開始時のBB数', (R.startBBcount).toFixed(0), 'BB'],
+    ['総チップ量', fmt(R.totalChips), ''],
+    ['開始ブラインド', fmt(R.startBB / 2) + ' / ' + fmt(R.startBB), ''],
+    ['1レベル', R.levelMin + '', '分' + (cfg.levelMode === 'auto' ? '（自動）' : '')],
+    ['レベル数', R.N + '', ''],
+    ['ブラインド上昇率', '×' + R.ratio.toFixed(2), '／レベル'],
+    ['総所要時間', hhmm(R.totalMinutes), cfg.startTime ? '→ ' + wallClock(cfg.startTime, R.totalMinutes) : '']
+  ].map(([k, v, u]) =>
+    '<div class="stat"><div class="k">' + k + '</div><div class="v">' + v + ' <small>' + u + '</small></div></div>'
+  ).join('');
+
+  /* 診断メッセージ */
+  const msg = [];
+  if (R.stack <= 0) msg.push(['bad', 'チップが1枚も配られていません。「1人あたりを自動配分」を押してください。']);
+  if (R.ratio > 1.62) msg.push(['bad', 'ブラインドの上がり方が急です（×' + R.ratio.toFixed(2) + '）。想定時間を延ばすか、1レベルを短くするか、開始スタックを減らすと自然な流れになります。']);
+  else if (R.ratio < 1.22) msg.push(['', 'ブラインドの上がり方が緩やかです（×' + R.ratio.toFixed(2) + '）。時間内に決着しない可能性があるので、1レベルを長くするか開始スタックを増やすとメリハリが出ます。']);
+  if (R.startBBcount < 30) msg.push(['bad', '開始スタックが ' + R.startBBcount.toFixed(0) + 'BB しかありません。チップを増やすか、最小額面を小さくしてください。']);
+  else if (R.startBBcount > 160) msg.push(['', '開始スタックが ' + R.startBBcount.toFixed(0) + 'BB とかなり深めです。ディープスタック戦をしたいならこのままでOKです。']);
+  if (Math.abs(R.totalMinutes - cfg.duration) > cfg.duration * 0.12)
+    msg.push(['', '想定 ' + hhmm(cfg.duration) + ' に対して、実際の構成は ' + hhmm(R.totalMinutes) + ' です（レベルの区切りの都合）。']);
+  const last = R.levels[R.levels.length - 1];
+  msg.push(['', '最終レベルは ' + fmt(last.sb) + '/' + fmt(last.bb) + '。ヘッズアップ想定で1人あたり約 ' + last.avgBB.toFixed(0) + 'BB となり、決着がつく計算です。']);
+  $('diag').innerHTML = msg.map(([cls, t]) => '<div class="warn ' + cls + '">' + t + '</div>').join('');
+
+  /* スタック内訳 */
+  $('stackBody').innerHTML = chips.filter(c => (c.per || 0) > 0).sort((a, b) => a.d - b.d).map(c =>
+    '<tr><td><span class="chip-dot" style="background:' + c.c + '"></span>' + fmt(c.d) + '</td>' +
+    '<td>' + c.per + ' 枚</td><td>' + fmt(c.per * c.d) + '</td>' +
+    '<td style="color:var(--muted)">残り ' + fmt(c.n - c.per * R.players) + ' 枚</td></tr>'
+  ).join('') +
+  '<tr><td style="font-weight:700">合計</td><td></td><td style="font-weight:700;color:var(--gold)">' + fmt(R.stack) + '</td><td></td></tr>';
+
+  /* カラーアップ */
+  $('colorup').innerHTML = R.colorup.length
+    ? R.colorup.map(u => '<div><span class="chip-dot" style="background:' + ((chips.find(c => c.d === u.d) || {}).c || '#888') +
+        '"></span><b>' + fmt(u.d) + '</b> チップ … <b>レベル ' + (u.atLevel - 1) + ' 終了時</b>に回収（レベル ' + u.atLevel + ' 以降は不要）</div>').join('')
+    : '<div>このストラクチャーでは、途中でのカラーアップは不要です。</div>';
+
+  /* ストラクチャー表 */
+  $('structBody').innerHTML = R.sched.map(s => {
+    if (s.type === 'break')
+      return '<tr class="brk"><td colspan="7">☕ 休憩 ' + s.minutes + '分' +
+             (cfg.startTime ? '（' + wallClock(cfg.startTime, s.startAt) + '〜）' : '') + '</td></tr>';
+    const L = s.ref;
+    return '<tr data-lv="' + L.no + '"><td><b>' + L.no + '</b></td>' +
+      '<td>' + fmt(L.sb) + '</td><td><b>' + fmt(L.bb) + '</b></td>' +
+      '<td>' + (L.ante ? fmt(L.ante) : '—') + '</td>' +
+      '<td>' + L.minutes + '分</td>' +
+      '<td style="color:var(--muted)">' + (cfg.startTime ? wallClock(cfg.startTime, L.startAt) : hhmm(L.startAt)) + '</td>' +
+      '<td style="color:' + (L.avgBB < 12 ? 'var(--red)' : 'var(--muted)') + '">' + L.avgBB.toFixed(0) + 'BB</td></tr>';
+  }).join('');
+}
+
+/* ================= トーナメントクロック ================= */
+const clk = { idx: 0, left: 0, running: false, timer: null, sound: true };
+
+function clkRender(){
+  if (!RESULT) return;
+  const s = RESULT.sched[clk.idx];
+  if (!s) return;
+  const el = $('clock');
+  el.classList.toggle('break', s.type === 'break');
+  const mm = Math.floor(clk.left / 60), ss = clk.left % 60;
+  $('clkTime').textContent = String(mm).padStart(2, '0') + ':' + String(ss).padStart(2, '0');
+  if (s.type === 'break'){
+    $('clkLabel').textContent  = 'BREAK';
+    $('clkBlinds').textContent = '☕ 休憩';
+    $('clkAnte').textContent   = '';
+  } else {
+    const L = s.ref;
+    $('clkLabel').textContent  = 'LEVEL ' + L.no;
+    $('clkBlinds').textContent = fmt(L.sb) + ' / ' + fmt(L.bb);
+    $('clkAnte').textContent   = L.ante ? 'ANTE ' + fmt(L.ante) : '';
+  }
+  const nx = RESULT.sched[clk.idx + 1];
+  $('clkNext').textContent = nx
+    ? (nx.type === 'break' ? '次：休憩 ' + nx.minutes + '分' : '次：Lv' + nx.ref.no + '  ' + fmt(nx.ref.sb) + ' / ' + fmt(nx.ref.bb) + (nx.ref.ante ? ' (ante ' + fmt(nx.ref.ante) + ')' : ''))
+    : '最終レベルです';
+  document.querySelectorAll('#structBody tr').forEach(tr => tr.classList.remove('now'));
+  if (s.type === 'level'){
+    const tr = document.querySelector('#structBody tr[data-lv="' + s.ref.no + '"]');
+    if (tr) tr.classList.add('now');
+  }
+}
+function clkLoad(i){
+  clk.idx = Math.max(0, Math.min(i, RESULT.sched.length - 1));
+  clk.left = RESULT.sched[clk.idx].minutes * 60;
+  clkRender();
+}
+function beep(){
+  if (!clk.sound) return;
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    const ac = new Ctx();
+    [0, 0.32, 0.64].forEach(t => {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = 'sine'; o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, ac.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(0.35, ac.currentTime + t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + t + 0.26);
+      o.connect(g); g.connect(ac.destination);
+      o.start(ac.currentTime + t); o.stop(ac.currentTime + t + 0.3);
+    });
+    setTimeout(() => ac.close(), 1500);
+  } catch (e) {}
+}
+function tick(){
+  if (!clk.running) return;
+  clk.left--;
+  if (clk.left <= 0){
+    beep();
+    if (clk.idx < RESULT.sched.length - 1) clkLoad(clk.idx + 1);
+    else { clk.left = 0; clk.running = false; $('btnStart').textContent = 'スタート'; }
+  }
+  clkRender();
+}
+$('btnStart').addEventListener('click', () => {
+  if (!RESULT) return;
+  clk.running = !clk.running;
+  $('btnStart').textContent = clk.running ? '一時停止' : '再開';
+  $('btnStart').classList.toggle('primary', !clk.running);
+});
+$('btnNext').addEventListener('click', () => RESULT && clkLoad(clk.idx + 1));
+$('btnPrev').addEventListener('click', () => RESULT && clkLoad(clk.idx - 1));
+$('btnResetClk').addEventListener('click', () => {
+  if (!RESULT) return;
+  clk.running = false; $('btnStart').textContent = 'スタート'; $('btnStart').classList.add('primary');
+  clkLoad(0);
+});
+$('btnSound').addEventListener('click', () => {
+  clk.sound = !clk.sound;
+  $('btnSound').textContent = clk.sound ? '🔔 音 ON' : '🔕 音 OFF';
+});
+setInterval(tick, 1000);
+
+/* ================= 保存・書き出し ================= */
+function download(name, blob){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+
+$('btnCsv').addEventListener('click', () => {
+  if (!RESULT) return;
+  const cfg = RESULT.cfg;
+  const rows = [['Level', 'SB', 'BB', 'Ante', 'Minutes', 'StartAt', 'AvgStack(BB)']];
+  RESULT.sched.forEach(s => {
+    if (s.type === 'break') rows.push(['BREAK', '', '', '', s.minutes, cfg.startTime ? wallClock(cfg.startTime, s.startAt) : hhmm(s.startAt), '']);
+    else rows.push([s.ref.no, s.ref.sb, s.ref.bb, s.ref.ante || 0, s.ref.minutes,
+                    cfg.startTime ? wallClock(cfg.startTime, s.ref.startAt) : hhmm(s.ref.startAt), s.ref.avgBB.toFixed(1)]);
+  });
+  const csv = '﻿' + rows.map(r => r.join(',')).join('\r\n');
+  download('blind-structure.csv', new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+});
+
+$('btnPrint').addEventListener('click', () => window.print());
+
+/* --- ロゴの高解像度書き出し（ベクター原本 → 任意解像度PNG） --- */
+function logoSvgSource(){
+  const svg = $('logo').cloneNode(true);
+  svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  svg.setAttribute('width', 800); svg.setAttribute('height', 400);
+  return '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(svg);
+}
+$('btnLogoSvg').addEventListener('click', () => {
+  download('bar-iyoiiyo-logo.svg', new Blob([logoSvgSource()], { type: 'image/svg+xml;charset=utf-8' }));
+});
+$('btnLogoPng').addEventListener('click', () => {
+  const W = 4000, H = 2000;
+  const img = new Image();
+  img.onload = () => {
+    const cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, 0, 0, W, H);
+    cv.toBlob(b => download('bar-iyoiiyo-logo@4000px.png', b), 'image/png');
+  };
+  img.onerror = () => alert('PNGの書き出しに失敗しました。SVGでの保存をお試しください。');
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(logoSvgSource());
+});
+
+/* ================= 設定の保存 / 復元 ================= */
+const KEY = 'iyoiiyo-blind-calc-v1';
+const FIELDS = ['players','duration','levelMode','anteMode','breakEvery','breakMinutes','startTime','targetBB','endFactor'];
+function save(){
+  try {
+    const o = { chips };
+    FIELDS.forEach(f => o[f] = $(f).value);
+    localStorage.setItem(KEY, JSON.stringify(o));
+  } catch (e) {}
+}
+function load(){
+  try {
+    const o = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (!o) return;
+    if (Array.isArray(o.chips) && o.chips.length) chips = o.chips;
+    FIELDS.forEach(f => { if (o[f] !== undefined && o[f] !== null) $(f).value = o[f]; });
+  } catch (e) {}
+}
+
+/* ================= 実行 ================= */
+function calc(){
+  const cfg = readCfg();
+  if (cfg.stack <= 0){
+    autoAllocate(chips, cfg.players);
+    renderChips();
+    cfg.stack = chips.reduce((s, c) => s + (c.per || 0) * c.d, 0);
+  }
+  if (cfg.stack <= 0){ alert('チップの額面と枚数を入力してください。'); return; }
+  RESULT = buildStructure(cfg);
+  render(RESULT);
+  clk.running = false;
+  $('btnStart').textContent = 'スタート';
+  $('btnStart').classList.add('primary');
+  clkLoad(0);
+  save();
+}
+
+$('btnCalc').addEventListener('click', calc);
+$('btnAutoAlloc').addEventListener('click', () => {
+  autoAllocate(chips, Math.max(2, +$('players').value || 2));
+  renderChips(); calc();
+});
+$('btnAddChip').addEventListener('click', () => {
+  const max = chips.reduce((m, c) => Math.max(m, c.d), 0);
+  chips.push({ d: max ? max * 5 : 25, n: 20, c: '#c8a44a', per: 0 });
+  renderChips(); save();
+});
+$('btnPreset').addEventListener('click', () => {
+  chips = JSON.parse(JSON.stringify(PRESET_CHIPS));
+  autoAllocate(chips, Math.max(2, +$('players').value || 2));
+  renderChips(); calc();
+});
+$('btnReset').addEventListener('click', () => {
+  if (!confirm('設定をすべて初期状態に戻します。よろしいですか？')) return;
+  try { localStorage.removeItem(KEY); } catch (e) {}
+  location.reload();
+});
+FIELDS.forEach(f => $(f).addEventListener('change', () => {
+  if (f === 'players'){ autoAllocate(chips, Math.max(2, +$('players').value || 2)); renderChips(); }
+  save(); calc();
+}));
+
+/* 起動 */
+load();
+if (!chips.some(c => (c.per || 0) > 0)) autoAllocate(chips, Math.max(2, +$('players').value || 2));
+renderChips();
+calc();
+</script>
+</body>
+</html>

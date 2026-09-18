@@ -1,0 +1,23 @@
+# Claude Code の個人設定（共有しない）
+.claude/settings.local.json
+
+# 認証情報
+.env
+.env.*
+*.pem
+*.key
+
+# 依存・ビルド成果物
+node_modules/
+dist/
+build/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS / エディタ
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

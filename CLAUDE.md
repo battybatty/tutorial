@@ -2,6 +2,8 @@
 
 このリポジトリは Claude Code の練習・チュートリアル用です。Claude Code はこのファイルを毎セッション読み込みます。
 
+@docs/memory/MEMORY.md
+
 ## 基本方針
 
 - 回答・コミットメッセージ・コード内コメントは日本語で書く。識別子（変数名・関数名・ファイル名）は英語。
@@ -36,10 +38,18 @@ Slack 投稿を頼まれたときは `.claude/skills/slack-post-structure/SKILL.
 - コミットは意味のある単位で分け、コミットメッセージは「何を・なぜ」を日本語で書く。
 - PR は明示的に頼まれたときだけ作成する。
 
+## セッションの記録とメモリ
+
+- 継続すべき事実・決定・好みは `docs/memory/MEMORY.md` に追記する（上で自動読み込みされる）。
+- 作業を終えるとき、または「ログを残して」と言われたときは `docs/chat-logs/YYYY-MM-DD-<slug>.md` を `docs/chat-logs/TEMPLATE.md` の形式で作成し、`docs/chat-logs/README.md` の一覧に 1 行追加する。
+- 生の転記ログ（JSONL）や個人情報はコミットしない。
+
 ## セットアップ
 
 - `.claude/settings.json`: 権限と SessionStart フックの設定
 - `.claude/hooks/session-start.sh`: 依存パッケージの自動インストール（package.json / requirements.txt などを検出したときのみ動く）
 - `.claude/skills/`: このプロジェクト用スキル
+- `docs/memory/MEMORY.md`: 引き継ぎ用メモリ
+- `docs/chat-logs/`: セッションごとの記録
 
 依存パッケージを追加したら `.claude/hooks/session-start.sh` の対応セクションを確認し、必要なら lint / test コマンドをこのファイルに追記する。
